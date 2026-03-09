@@ -1,0 +1,2213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#000000"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<title>Life OS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:#000;color:#fff;font-family:'Inter',sans-serif;height:100%;overflow:hidden}
+#app{max-width:430px;margin:0 auto;height:100vh;display:flex;flex-direction:column;position:relative;overflow:hidden}
+
+/* LOADING */
+#loading{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s}
+.load-logo{font-family:'Rajdhani',sans-serif;font-size:48px;font-weight:700;letter-spacing:8px}
+.load-logo span{color:#ff1a1a}
+.load-bar{width:180px;height:3px;background:#111;border-radius:2px;margin-top:28px;overflow:hidden}
+.load-fill{height:100%;background:#ff1a1a;border-radius:2px;animation:loadbar 2s ease forwards}
+.load-sub{font-size:10px;color:#333;letter-spacing:3px;margin-top:12px;font-family:'JetBrains Mono',monospace}
+@keyframes loadbar{from{width:0}to{width:100%}}
+
+/* SCREENS */
+.screen{flex:1;overflow-y:auto;padding-bottom:85px;animation:fadeIn .25s ease}
+.screen::-webkit-scrollbar{display:none}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glow{0%,100%{box-shadow:0 0 15px #ff1a1a33}50%{box-shadow:0 0 30px #ff1a1a77}}
+@keyframes glowG{0%,100%{box-shadow:0 0 10px #00ff8822}50%{box-shadow:0 0 20px #00ff8855}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;padding:24px}
+.login-logo{font-family:'Rajdhani',sans-serif;font-size:42px;font-weight:700;letter-spacing:8px;margin-bottom:8px}
+.login-logo span{color:#ff1a1a}
+.login-sub{font-size:11px;color:#333;letter-spacing:3px;font-family:'JetBrains Mono',monospace;margin-bottom:48px}
+.profile-cards{display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px}
+.profile-card{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.profile-card:active{transform:scale(.97)}
+.profile-card.david{border-color:#ff1a1a33}
+.profile-card.david:hover{border-color:#ff1a1a66;background:#110000}
+.profile-card.pietro{border-color:#0088ff33}
+.profile-card.pietro:hover{border-color:#0088ff66;background:#000d1a}
+.profile-card.startup{border-color:#00ff8833}
+.profile-card.startup:hover{border-color:#00ff8866;background:#001a0d}
+.profile-avatar{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.profile-info{flex:1}
+.profile-name{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;letter-spacing:2px}
+.profile-desc{font-size:11px;color:#555;font-family:'JetBrains Mono',monospace;margin-top:2px}
+.profile-arrow{color:#333;font-size:18px}
+
+/* PIN SCREEN */
+#pin-screen{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:101;padding:24px}
+.pin-title{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;letter-spacing:3px;margin-bottom:6px}
+.pin-sub{font-size:12px;color:#555;font-family:'JetBrains Mono',monospace;margin-bottom:40px}
+.pin-dots{display:flex;gap:16px;margin-bottom:40px}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid #333;transition:all .2s}
+.pin-dot.filled{background:#ff1a1a;border-color:#ff1a1a;box-shadow:0 0 8px #ff1a1a66}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:260px}
+.pin-btn{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:14px;height:64px;font-size:22px;font-weight:600;color:#fff;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif}
+.pin-btn:active{background:#1a1a1a;transform:scale(.94)}
+.pin-btn.del{font-size:16px;color:#555}
+.pin-btn.empty{background:transparent;border:none;cursor:default}
+.pin-error{color:#ff4444;font-size:12px;font-family:'JetBrains Mono',monospace;margin-top:16px;animation:pulse .5s ease}
+.pin-back{position:absolute;top:48px;left:20px;background:none;border:none;color:#555;cursor:pointer;font-size:14px;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:6px}
+
+/* HEADER */
+.hdr{background:#000;padding:44px 16px 12px;border-bottom:1px solid #0d0d0d;position:sticky;top:0;z-index:50}
+.hdr-row{display:flex;justify-content:space-between;align-items:center}
+.logo{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;letter-spacing:3px}
+.logo-r{color:#ff1a1a}
+.user-badge{display:flex;align-items:center;gap:6px;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:20px;padding:4px 10px;cursor:pointer}
+.user-badge span{font-size:10px;font-family:'JetBrains Mono',monospace;color:#888}
+
+/* TABS */
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid #1a1a1a;background:transparent;color:#444;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .2s}
+.tab.on{background:#ff1a1a22;border-color:#ff1a1a55;color:#ff1a1a}
+.tab.on.blue{background:#0088ff22;border-color:#0088ff55;color:#0088ff}
+.tab.on.green{background:#00ff8822;border-color:#00ff8855;color:#00ff88}
+
+/* CARDS */
+.pad{padding:14px}
+.card{background:#0d0d0d;border:1px solid #111;border-radius:14px;padding:14px;margin-bottom:10px}
+.card-red{background:linear-gradient(135deg,#130000,#080808);border:1px solid #ff1a1a22;border-radius:14px;padding:14px;margin-bottom:10px;animation:glow 3s ease-in-out infinite}
+.card-blue{background:linear-gradient(135deg,#00091a,#080808);border:1px solid #0088ff22;border-radius:14px;padding:14px;margin-bottom:10px}
+.card-green{background:linear-gradient(135deg,#001a09,#080808);border:1px solid #00ff8822;border-radius:14px;padding:14px;margin-bottom:10px;animation:glowG 3s ease-in-out infinite}
+.sec{font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:600;letter-spacing:3px;color:#333;margin:14px 0 8px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:#0d0d0d}
+
+/* TYPOGRAPHY */
+.mono{font-family:'JetBrains Mono',monospace}
+.raj{font-family:'Rajdhani',sans-serif;font-weight:700}
+.big{font-size:30px;font-weight:700;line-height:1.1}
+.med{font-size:20px;font-weight:700}
+.sm{font-size:11px;color:#555}
+.lbl{font-size:10px;font-weight:600;color:#444;letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:5px}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;font-family:'JetBrains Mono',monospace}
+.b-red{background:#ff1a1a22;color:#ff1a1a;border:1px solid #ff1a1a44}
+.b-green{background:#00ff8822;color:#00ff88;border:1px solid #00ff8844}
+.b-blue{background:#0088ff22;color:#0088ff;border:1px solid #0088ff44}
+.b-yellow{background:#ffcc0022;color:#ffcc00;border:1px solid #ffcc0044}
+.b-purple{background:#aa00ff22;color:#aa00ff;border:1px solid #aa00ff44}
+.b-orange{background:#ff660022;color:#ff6600;border:1px solid #ff660044}
+
+/* PROGRESS */
+.ptrack{height:4px;background:#111;border-radius:2px;overflow:hidden}
+.pfill{height:100%;border-radius:2px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.ptrack-lg{height:7px;background:#111;border-radius:4px;overflow:hidden}
+.pfill-lg{height:100%;border-radius:4px;transition:width .8s}
+
+/* LIST */
+.row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #0a0a0a}
+.row:last-child{border:none}
+.ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* BUTTONS */
+.btn{background:#ff1a1a;color:#fff;border:none;border-radius:11px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;width:100%;font-family:'Inter',sans-serif;transition:all .15s;margin-top:6px}
+.btn:active{transform:scale(.97);opacity:.9}
+.btn-blue{background:#0088ff}
+.btn-green{background:#00cc66}
+.btn-o{background:#0d0d0d;color:#888;border:1px solid #1a1a1a;border-radius:11px;padding:12px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s}
+.btn-o:hover{background:#111;color:#fff}
+.btn-sm{background:#ff1a1a;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-sm-blue{background:#0088ff}
+.btn-sm-green{background:#00cc66}
+.btn-sm-o{background:transparent;color:#555;border:1px solid #1a1a1a;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace}
+.btn-icon{background:none;border:none;cursor:pointer;color:#444;padding:4px;display:inline-flex;align-items:center;transition:color .2s}
+.btn-icon:hover{color:#fff}
+.btn-icon.del:hover{color:#ff4444}
+
+/* INPUT */
+.inp{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:10px;padding:12px 13px;color:#fff;font-size:14px;width:100%;outline:none;font-family:'Inter',sans-serif;transition:border-color .2s}
+.inp:focus{border-color:#ff1a1a44}
+.inp::placeholder{color:#2a2a2a}
+.sel{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:10px;padding:12px 13px;color:#fff;font-size:14px;width:100%;outline:none;font-family:'Inter',sans-serif;appearance:none;cursor:pointer}
+.inp-row{margin-bottom:12px}
+.inp-row .lbl{margin-bottom:5px;display:block}
+.textarea{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:10px;padding:12px 13px;color:#fff;font-size:14px;width:100%;outline:none;font-family:'Inter',sans-serif;resize:none;min-height:80px}
+.textarea:focus{border-color:#ff1a1a44}
+.textarea::placeholder{color:#2a2a2a}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease}
+.modal{background:#080808;border:1px solid #1a1a1a;border-radius:22px 22px 0 0;padding:20px 16px 36px;width:100%;max-width:430px;max-height:90vh;overflow-y:auto}
+.modal::-webkit-scrollbar{display:none}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.modal-title{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:2px}
+.close-btn{background:#111;border:1px solid #222;color:#666;cursor:pointer;font-size:18px;line-height:1;padding:4px 8px;border-radius:8px}
+
+/* NAV */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(4,4,4,.98);border-top:1px solid #0d0d0d;display:flex;justify-content:space-around;padding:8px 0 20px;z-index:100}
+.ni{display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 8px;border:none;background:transparent;color:#2a2a2a;cursor:pointer;transition:color .2s;min-width:44px}
+.ni.on{color:#ff1a1a}
+.ni.on.blue{color:#0088ff}
+.ni.on.green{color:#00ff88}
+.ni svg{width:19px;height:19px}
+.ni span{font-size:8px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+
+/* FAB */
+.fab{position:fixed;bottom:82px;right:16px;width:48px;height:48px;border-radius:50%;background:#ff1a1a;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px #ff1a1a44;z-index:99;animation:glow 2s ease-in-out infinite;transition:transform .2s}
+
+/* SCORE RING */
+.ring-wrap{position:relative;width:100px;height:100px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ring-wrap svg{position:absolute}
+.ring-inner{text-align:center;z-index:1}
+.ring-num{font-family:'Rajdhani',sans-serif;font-size:30px;font-weight:700;line-height:1}
+.ring-lbl{font-size:9px;color:#444;font-family:'JetBrains Mono',monospace;letter-spacing:1px}
+
+/* MISC */
+.chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:10px;background:#111;color:#555;border:1px solid #1a1a1a;font-family:'JetBrains Mono',monospace}
+.divider{height:1px;background:#0d0d0d;margin:12px 0}
+.empty-state{text-align:center;padding:40px 20px;color:#2a2a2a}
+.empty-state .emoji{font-size:40px;margin-bottom:12px;opacity:.4}
+.empty-state p{font-size:13px;font-family:'JetBrains Mono',monospace}
+.empty-state .sub{font-size:11px;margin-top:6px;color:#1a1a1a}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:90px;padding:0 2px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar-col .bar{width:100%;border-radius:3px 3px 0 0;min-height:4px}
+.bar-col .blbl{font-size:9px;color:#333;font-family:'JetBrains Mono',monospace}
+.drops{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0}
+.drop{width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:none;cursor:pointer;transition:all .3s}
+.drop.on{background:#0088ff;box-shadow:0 0 10px #0088ff55}
+.drop.off{background:#0d0d0d;border:1px solid #1a1a1a}
+.streak{display:flex;align-items:center;gap:3px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:#ff6600}
+.tag{display:inline-flex;padding:2px 7px;border-radius:6px;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:600}
+.tag-red{background:#ff1a1a22;color:#ff1a1a}
+.tag-green{background:#00ff8822;color:#00ff88}
+.tag-yellow{background:#ffcc0022;color:#ffcc00}
+.tag-blue{background:#0088ff22;color:#0088ff}
+.tag-gray{background:#1a1a1a;color:#666}
+.car-status{display:flex;align-items:center;gap:6px;font-size:11px;font-family:'JetBrains Mono',monospace}
+.notification-banner{background:#ff1a1a11;border:1px solid #ff1a1a33;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="loading">
+  <div class="load-logo">LIFE<span> OS</span></div>
+  <div class="load-bar"><div class="load-fill"></div></div>
+  <div class="load-sub">INICIALIZANDO SISTEMA...</div>
+</div>
+
+<div id="login-screen" style="display:none">
+  <div class="login-logo">LIFE<span> OS</span></div>
+  <div class="login-sub">SELECIONE SEU PERFIL</div>
+  <div class="profile-cards">
+    <div class="profile-card david" onclick="selectProfile('david')">
+      <div class="profile-avatar" style="background:#ff1a1a22">👤</div>
+      <div class="profile-info">
+        <div class="profile-name" style="color:#ff1a1a">DAVID</div>
+        <div class="profile-desc">Perfil pessoal</div>
+      </div>
+      <div class="profile-arrow">›</div>
+    </div>
+    <div class="profile-card pietro" onclick="selectProfile('pietro')">
+      <div class="profile-avatar" style="background:#0088ff22">👤</div>
+      <div class="profile-info">
+        <div class="profile-name" style="color:#0088ff">PIETRO</div>
+        <div class="profile-desc">Perfil pessoal + Empréstimos</div>
+      </div>
+      <div class="profile-arrow">›</div>
+    </div>
+    <div class="profile-card startup" onclick="selectProfile('startup')">
+      <div class="profile-avatar" style="background:#00ff8822">🚗</div>
+      <div class="profile-info">
+        <div class="profile-name" style="color:#00ff88">STARTUP</div>
+        <div class="profile-desc">Empresa compartilhada</div>
+      </div>
+      <div class="profile-arrow">›</div>
+    </div>
+  </div>
+</div>
+
+<div id="pin-screen" style="display:none">
+  <button class="pin-back" onclick="backToLogin()">‹ Voltar</button>
+  <div class="pin-title" id="pin-title">DAVID</div>
+  <div class="pin-sub" id="pin-sub">Digite sua senha</div>
+  <div class="pin-dots" id="pin-dots">
+    <div class="pin-dot"></div>
+    <div class="pin-dot"></div>
+    <div class="pin-dot"></div>
+    <div class="pin-dot"></div>
+  </div>
+  <div class="pin-pad">
+    <button class="pin-btn" onclick="pinInput('1')">1</button>
+    <button class="pin-btn" onclick="pinInput('2')">2</button>
+    <button class="pin-btn" onclick="pinInput('3')">3</button>
+    <button class="pin-btn" onclick="pinInput('4')">4</button>
+    <button class="pin-btn" onclick="pinInput('5')">5</button>
+    <button class="pin-btn" onclick="pinInput('6')">6</button>
+    <button class="pin-btn" onclick="pinInput('7')">7</button>
+    <button class="pin-btn" onclick="pinInput('8')">8</button>
+    <button class="pin-btn" onclick="pinInput('9')">9</button>
+    <button class="pin-btn empty"></button>
+    <button class="pin-btn" onclick="pinInput('0')">0</button>
+    <button class="pin-btn del" onclick="pinDelete()">⌫</button>
+  </div>
+  <div class="pin-error" id="pin-error" style="display:none">Senha incorreta</div>
+</div>
+
+<div id="app" style="display:none">
+  <div id="screen" class="screen"></div>
+  <nav class="nav" id="nav"></nav>
+  <button class="fab" id="fab" onclick="toggleFab()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// STATE & STORAGE
+// ═══════════════════════════════════════════════════════
+const STORE_KEY = 'lifeos_v1';
+
+function loadStore() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch(e) { return {}; }
+}
+function saveStore(data) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+let STORE = loadStore();
+
+function getProfile(profile) {
+  if (!STORE[profile]) STORE[profile] = {};
+  return STORE[profile];
+}
+function saveProfile(profile, data) {
+  STORE[profile] = data;
+  saveStore(STORE);
+}
+
+// Auth
+function getPins() { return STORE._pins || {}; }
+function savePin(profile, pin) { if(!STORE._pins) STORE._pins={}; STORE._pins[profile]=pin; saveStore(STORE); }
+function hasPin(profile) { return !!getPins()[profile]; }
+function checkPin(profile, pin) { return getPins()[profile] === pin; }
+
+// ═══════════════════════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════════════════════
+let S = {
+  profile: null,
+  screen: 'dash',
+  tab: {},
+  modal: null,
+  editing: null,
+  fabOpen: false,
+  pinEntry: '',
+  pinMode: 'check', // check | set
+  pendingProfile: null,
+};
+
+function getData() { return getProfile(S.profile) || {}; }
+function setData(key, val) {
+  const d = getProfile(S.profile);
+  d[key] = val;
+  saveProfile(S.profile, d);
+}
+function getKey(key, def) {
+  const d = getData();
+  return d[key] !== undefined ? d[key] : def;
+}
+
+// ═══════════════════════════════════════════════════════
+// AUTH FLOW
+// ═══════════════════════════════════════════════════════
+function selectProfile(profile) {
+  S.pendingProfile = profile;
+  S.pinEntry = '';
+  const names = {david:'DAVID', pietro:'PIETRO', startup:'STARTUP'};
+  $('pin-title').textContent = names[profile];
+
+  if (!hasPin(profile)) {
+    S.pinMode = 'set';
+    $('pin-sub').textContent = 'Crie sua senha (4 dígitos)';
+  } else {
+    S.pinMode = 'check';
+    $('pin-sub').textContent = 'Digite sua senha';
+  }
+  updatePinDots();
+  $('pin-error').style.display = 'none';
+  hide('login-screen');
+  show('pin-screen');
+}
+
+function pinInput(digit) {
+  if (S.pinEntry.length >= 4) return;
+  S.pinEntry += digit;
+  updatePinDots();
+  if (S.pinEntry.length === 4) {
+    setTimeout(() => {
+      if (S.pinMode === 'set') {
+        savePin(S.pendingProfile, S.pinEntry);
+        enterApp(S.pendingProfile);
+      } else {
+        if (checkPin(S.pendingProfile, S.pinEntry)) {
+          enterApp(S.pendingProfile);
+        } else {
+          $('pin-error').style.display = 'block';
+          S.pinEntry = '';
+          updatePinDots();
+        }
+      }
+    }, 150);
+  }
+}
+
+function pinDelete() {
+  S.pinEntry = S.pinEntry.slice(0, -1);
+  updatePinDots();
+  $('pin-error').style.display = 'none';
+}
+
+function updatePinDots() {
+  const dots = $$('.pin-dot');
+  dots.forEach((d, i) => {
+    d.classList.toggle('filled', i < S.pinEntry.length);
+  });
+}
+
+function backToLogin() {
+  hide('pin-screen');
+  show('login-screen');
+  S.pinEntry = '';
+}
+
+function enterApp(profile) {
+  S.profile = profile;
+  S.screen = 'dash';
+  S.tab = {};
+  hide('pin-screen');
+  show('app');
+  render();
+  requestNotificationPermission();
+}
+
+function logout() {
+  S.profile = null;
+  S.screen = 'dash';
+  hide('app');
+  show('login-screen');
+}
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+const show = id => { const el=$(id); if(el) el.style.display='flex'; };
+const hide = id => { const el=$(id); if(el) el.style.display='none'; };
+const fmtR = n => 'R$' + Number(n).toLocaleString('pt-BR', {minimumFractionDigits:2});
+const fmtN = n => Number(n).toLocaleString('pt-BR');
+const pct = (a,b) => b>0 ? Math.min(Math.round((a/b)*100),100) : 0;
+const today = () => new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'short'});
+const todayISO = () => new Date().toISOString().slice(0,10);
+const uid = () => Date.now() + Math.random().toString(36).slice(2);
+const getTab = (key, def='') => S.tab[key] || def;
+const setTab = (key, val) => { S.tab[key] = val; render(); };
+
+function icon(d, size=18, color='currentColor') {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+}
+
+const IC = {
+  dash:'<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+  wallet:'<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>',
+  book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+  target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  car:'<path d="M19 17H5v-5l2-5h10l2 5v5z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/><path d="M5 12h14"/>',
+  money:'<circle cx="12" cy="12" r="10"/><path d="M12 6v2"/><path d="M12 16v2"/><path d="M8.5 9.5A3.5 3.5 0 0 1 12 8a3.5 3.5 0 0 1 0 7 3.5 3.5 0 0 1-3.5-3.5"/>',
+  gym:'<path d="M6 5v14"/><path d="M18 5v14"/><path d="M2 9h4"/><path d="M2 15h4"/><path d="M20 9h2"/><path d="M20 15h2"/><rect x="6" y="3" width="12" height="4" rx="1"/><rect x="6" y="17" width="12" height="4" rx="1"/>',
+  up:'<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
+  down:'<path d="M17 7H7v10"/><path d="M17 17 7 7"/>',
+  check:'<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+  circle:'<circle cx="12" cy="12" r="10"/>',
+  flame:'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  trophy:'<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>',
+  drop:'<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>',
+  bell:'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  edit:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+  trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+  lock:'<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  calendar:'<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+  wrench:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  chart:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  vision:'<circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>',
+  flash:'<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>',
+  home:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  chevD:'<path d="m6 9 6 6 6-6"/>',
+  chevU:'<path d="m18 15-6-6-6 6"/>',
+  img:'<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+  supply:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+  journal:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  food:'<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>',
+  imc:'<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+  routine:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+};
+
+// ═══════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════════════
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function scheduleNotification(title, body, dateTime) {
+  if (!('Notification' in window)) return;
+  const delay = new Date(dateTime) - new Date();
+  if (delay <= 0) return;
+  setTimeout(() => {
+    if (Notification.permission === 'granted') {
+      new Notification(title, { body, icon: '/icon.png' });
+    }
+  }, delay);
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER ENGINE
+// ═══════════════════════════════════════════════════════
+function render() {
+  const screens = { dash, finance, study, health, gym, garage, loans, reading, routine, vision };
+  const fn = screens[S.screen];
+  $('screen').innerHTML = fn ? fn() : '';
+  renderNav();
+  if (S.modal) renderModal();
+  else { const o=$('modal-overlay'); if(o) o.remove(); }
+  const fm=$('fab-menu'); if(fm&&!S.fabOpen) fm.remove();
+}
+
+function scoreRing(score, color='#ff1a1a') {
+  const r=43, circ=2*Math.PI*r, off=circ-(score/100)*circ;
+  const col = score>=80?'#00ff88':score>=60?'#ffcc00':color;
+  return `<div class="ring-wrap">
+    <svg width="100" height="100" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="${r}" fill="none" stroke="#111" stroke-width="6"/>
+      <circle cx="50" cy="50" r="${r}" fill="none" stroke="${col}" stroke-width="6"
+        stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
+        stroke-linecap="round" transform="rotate(-90 50 50)"
+        style="transition:stroke-dashoffset 1.2s;filter:drop-shadow(0 0 6px ${col}88)"/>
+    </svg>
+    <div class="ring-inner"><div class="ring-num">${score}</div><div class="ring-lbl">SCORE</div></div>
+  </div>`;
+}
+
+function barChart(data, key, color, labelKey='day') {
+  if (!data.length) return '<div class="sm" style="text-align:center;padding:20px">Sem dados</div>';
+  const max = Math.max(...data.map(d=>Number(d[key])||0), 1);
+  return `<div class="bar-chart">${data.map(d=>{
+    const h = Math.max(Math.round((Number(d[key])/max)*80),4);
+    return `<div class="bar-col"><div class="bar" style="height:${h}px;background:${color}"></div><div class="blbl">${d[labelKey]}</div></div>`;
+  }).join('')}</div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════
+function dash() {
+  const habits = getKey('habits', []);
+  const water = getKey('water', 0);
+  const waterGoal = getKey('waterGoal', 8);
+  const workouts = getKey('workouts', []);
+  const sessions = getKey('studySessions', []);
+  const done = habits.filter(h=>h.done).length;
+  const tot = habits.length;
+  const totalStudy = sessions.reduce((s,ss)=>s+(ss.dur||0),0)/60;
+  const accounts = getKey('accounts', []);
+  const totalBal = accounts.reduce((s,a)=>s+(Number(a.balance)||0),0);
+  const txs = getKey('transactions', []);
+  const notifications = getKey('notifications', []);
+  const upcoming = notifications.filter(n=>new Date(n.date)>new Date()).slice(0,2);
+
+  const score = Math.min(100, Math.round(
+    (waterGoal>0?water/waterGoal:0)*20 +
+    (tot>0?done/tot:0)*25 +
+    Math.min(totalStudy/20,1)*20 +
+    Math.min(workouts.length/8,1)*20 +
+    15
+  ));
+
+  const profileName = {david:'DAVID', pietro:'PIETRO', startup:'STARTUP'}[S.profile];
+  const profileColor = {david:'#ff1a1a', pietro:'#0088ff', startup:'#00ff88'}[S.profile];
+
+  return `
+  <div class="hdr">
+    <div class="hdr-row">
+      <div>
+        <div class="logo">LIFE<span class="logo-r"> OS</span></div>
+        <div style="font-size:10px;color:#333;font-family:'JetBrains Mono',monospace;margin-top:1px">${today()}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="user-badge" onclick="logout()">
+          <span style="color:${profileColor}">${profileName}</span>
+          ${icon(IC.logout,12,'#444')}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pad">
+    ${upcoming.length?`
+    <div class="sec">Lembretes</div>
+    ${upcoming.map(n=>`
+      <div class="notification-banner">
+        ${icon(IC.bell,14,'#ff1a1a')}
+        <div style="flex:1"><div style="font-size:12px;font-weight:600">${n.title}</div><div class="mono sm">${n.date}</div></div>
+      </div>`).join('')}`:''}
+
+    <div class="card-red" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="lbl" style="color:${profileColor}">PATRIMÔNIO</div>
+        <div class="mono big">${fmtR(totalBal)}</div>
+        <div style="margin-top:8px">
+          ${score>=80?'<span class="badge b-green">🔥 Excelente</span>':score>=60?'<span class="badge b-yellow">⚡ Bom</span>':'<span class="badge b-red">💪 Melhorando</span>'}
+        </div>
+      </div>
+      ${scoreRing(score, profileColor)}
+    </div>
+
+    <div class="g2">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+          <div class="ico" style="background:#aa00ff22">${icon(IC.book,15,'#aa00ff')}</div>
+          <div class="lbl">ESTUDOS</div>
+        </div>
+        <div class="mono med">${totalStudy.toFixed(1)}h</div>
+        <div class="sm">total registrado</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+          <div class="ico" style="background:#00ff8822">${icon(IC.check,15,'#00ff88')}</div>
+          <div class="lbl">HÁBITOS</div>
+        </div>
+        <div class="mono med">${done}/${tot}</div>
+        <div class="sm">hoje</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+          <div class="ico" style="background:#0088ff22">${icon(IC.drop,15,'#0088ff')}</div>
+          <div class="lbl">ÁGUA</div>
+        </div>
+        <div class="mono med">${water}/${waterGoal}</div>
+        <div class="ptrack" style="margin-top:6px"><div class="pfill" style="width:${pct(water,waterGoal)}%;background:#0088ff"></div></div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+          <div class="ico" style="background:#ff1a1a22">${icon(IC.gym,15,'#ff1a1a')}</div>
+          <div class="lbl">ACADEMIA</div>
+        </div>
+        <div class="mono med">${workouts.length}</div>
+        <div class="sm">treinos</div>
+      </div>
+    </div>
+
+    ${habits.length?`
+    <div class="sec">Hábitos de hoje</div>
+    <div class="card">
+      ${habits.slice(0,4).map(h=>`
+        <div class="row" onclick="toggleHabit('${h.id}')">
+          <div style="font-size:20px">${h.icon||'⭐'}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:500">${h.name}</div>
+            <div class="streak">${icon(IC.flame,10,'#ff6600')} ${h.streak||0} dias</div>
+          </div>
+          ${h.done?icon(IC.check,22,'#00ff88'):icon(IC.circle,22,'#1a1a1a')}
+        </div>`).join('')}
+    </div>`:''}
+
+    ${txs.length?`
+    <div class="sec">Transações recentes</div>
+    <div class="card">
+      ${txs.slice(0,3).map(t=>`
+        <div class="row">
+          <div class="ico" style="background:${t.amount>0?'#00ff8811':'#ff1a1a11'}">${t.amount>0?icon(IC.up,14,'#00ff88'):icon(IC.down,14,'#ff4444')}</div>
+          <div style="flex:1"><div style="font-size:13px;font-weight:500">${t.desc}</div><div class="mono sm">${t.cat}</div></div>
+          <div class="mono" style="font-size:12px;font-weight:600;color:${t.amount>0?'#00ff88':'#ff4444'}">${t.amount>0?'+':''}${fmtR(Math.abs(t.amount))}</div>
+        </div>`).join('')}
+    </div>`:''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// FINANCE
+// ═══════════════════════════════════════════════════════
+function finance() {
+  const tab = getTab('finance','overview');
+  const accounts = getKey('accounts',[]);
+  const txs = getKey('transactions',[]);
+  const total = accounts.reduce((s,a)=>s+(Number(a.balance)||0),0);
+  const inc = txs.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+  const exp = Math.abs(txs.filter(t=>t.amount<0).reduce((s,t)=>s+Number(t.amount),0));
+
+  return `
+  <div class="hdr">
+    <div class="hdr-row">
+      <div class="logo">FINANÇAS</div>
+      <button class="btn-sm" onclick="openModal('addTx')">+ Adicionar</button>
+    </div>
+    <div class="tabs">
+      ${['overview','contas','transações'].map(t=>`<button class="tab ${tab===t?'on':''}" onclick="setTab('finance','${t}')">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}
+    </div>
+  </div>
+  <div class="pad">
+  ${tab==='overview'?`
+    <div class="card-red" style="text-align:center">
+      <div class="lbl" style="color:#ff4444;display:flex;justify-content:center">SALDO TOTAL</div>
+      <div class="mono" style="font-size:34px;font-weight:700;margin:8px 0">${fmtR(total)}</div>
+      <div style="display:flex;justify-content:center;gap:20px">
+        <div><div class="mono sm">RECEITAS</div><div class="mono" style="color:#00ff88;font-weight:600">+${fmtR(inc)}</div></div>
+        <div style="width:1px;background:#1a1a1a"></div>
+        <div><div class="mono sm">DESPESAS</div><div class="mono" style="color:#ff4444;font-weight:600">-${fmtR(exp)}</div></div>
+      </div>
+    </div>
+    ${accounts.length===0?`<div class="empty-state"><div class="emoji">💳</div><p>Nenhuma conta</p><div class="sub">Vá em Contas e adicione</div></div>`:''}
+    ${accounts.map(a=>`
+      <div class="card" style="border-color:${a.color||'#ff1a1a'}33">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-size:14px;font-weight:600">${a.name}</div><div class="chip" style="margin-top:4px">${a.type}</div></div>
+          <div style="text-align:right">
+            <div class="mono" style="font-size:19px;font-weight:700;color:${a.color||'#ff1a1a'}">${fmtR(Number(a.balance)||0)}</div>
+          </div>
+        </div>
+      </div>`).join('')}
+  `:''}
+  ${tab==='contas'?`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn-sm" onclick="openModal('addAccount')">+ Nova Conta</button>
+    </div>
+    ${accounts.length===0?`<div class="empty-state"><div class="emoji">💳</div><p>Nenhuma conta ainda</p><div class="sub">Adicione sua primeira conta</div></div>`:''}
+    ${accounts.map(a=>`
+      <div class="card" style="border-color:${a.color||'#ff1a1a'}33">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:14px;font-weight:600">${a.name}</div>
+            <div class="chip" style="margin-top:4px">${a.type}</div>
+          </div>
+          <div style="text-align:right;display:flex;align-items:center;gap:10px">
+            <div class="mono" style="font-size:18px;font-weight:700;color:${a.color||'#ff1a1a'}">${fmtR(Number(a.balance)||0)}</div>
+            <div style="display:flex;gap:4px">
+              <button class="btn-icon" onclick="openModal('editAccount','${a.id}')">${icon(IC.edit,14,'#555')}</button>
+              <button class="btn-icon del" onclick="deleteItem('accounts','${a.id}')">${icon(IC.trash,14,'#555')}</button>
+            </div>
+          </div>
+        </div>
+      </div>`).join('')}
+  `:''}
+  ${tab==='transações'?`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn-sm" onclick="openModal('addTx')">+ Nova</button>
+    </div>
+    ${txs.length===0?`<div class="empty-state"><div class="emoji">💸</div><p>Nenhuma transação</p><div class="sub">Registre receitas e despesas</div></div>`:''}
+    ${txs.map(t=>`
+      <div class="card" style="padding:12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="ico" style="background:${t.amount>0?'#00ff8811':'#ff1a1a11'}">${t.amount>0?icon(IC.up,14,'#00ff88'):icon(IC.down,14,'#ff4444')}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:500">${t.desc}</div>
+            <div class="mono sm">${t.cat} · ${t.date}</div>
+          </div>
+          <div style="text-align:right;display:flex;align-items:center;gap:8px">
+            <div class="mono" style="font-size:13px;font-weight:600;color:${t.amount>0?'#00ff88':'#ff4444'}">${t.amount>0?'+':''}${fmtR(Math.abs(t.amount))}</div>
+            <button class="btn-icon del" onclick="deleteItem('transactions','${t.id}')">${icon(IC.trash,13,'#555')}</button>
+          </div>
+        </div>
+      </div>`).join('')}
+  `:''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// STUDY
+// ═══════════════════════════════════════════════════════
+function study() {
+  const tab = getTab('study','subjects');
+  const subjects = getKey('subjects',[]);
+  const sessions = getKey('studySessions',[]);
+  const flashcards = getKey('flashcards',[]);
+  const notes = getKey('studyNotes',[]);
+  const timer = S.studyTimer || {running:false,secs:0,sub:''};
+
+  return `
+  <div class="hdr">
+    <div class="hdr-row">
+      <div class="logo">ESTUDOS</div>
+      <button class="btn-sm" onclick="openModal('addSession')" style="background:#aa00ff">+ Sessão</button>
+    </div>
+    <div class="tabs">
+      ${['subjects','timer','flashcards','notas'].map(t=>`<button class="tab ${tab===t?'on':''}" onclick="setTab('study','${t}')">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}
+    </div>
+  </div>
+  <div class="pad">
+  ${tab==='subjects'?`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn-sm" onclick="openModal('addSubject')" style="background:#aa00ff">+ Matéria</button>
+    </div>
+    ${subjects.length===0?`<div class="empty-state"><div class="emoji">📚</div><p>Nenhuma matéria</p><div class="sub">Adicione suas matérias de estudo</div></div>`:''}
+    ${subjects.map(s=>`
+      <div class="card" style="border-left:3px solid ${s.color||'#aa00ff'}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div>
+            <div style="font-size:14px;font-weight:600">${s.name}</div>
+            <div class="streak">${icon(IC.flame,10,'#ff6600')} ${s.streak||0} dias</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="text-align:right">
+              <div class="mono" style="font-size:15px;font-weight:700;color:${s.color||'#aa00ff'}">${s.hrs||0}h</div>
+              <div class="sm">/ ${s.goal||0}h meta</div>
+            </div>
+            <button class="btn-icon del" onclick="deleteItem('subjects','${s.id}')">${icon(IC.trash,13,'#555')}</button>
+          </div>
+        </div>
+        <div class="ptrack"><div class="pfill" style="width:${pct(s.hrs||0,s.goal||1)}%;background:${s.color||'#aa00ff'}"></div></div>
+      </div>`).join('')}
+    ${sessions.length?`
+    <div class="sec">Sessões recentes</div>
+    <div class="card">
+      ${sessions.slice(0,5).map(s=>`
+        <div class="row">
+          <div style="flex:1"><div style="font-size:13px;font-weight:500">${s.sub}</div><div class="mono sm">${s.notes||''} · ${s.date}</div></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="mono" style="font-size:14px;color:#aa00ff">${s.dur}m</div>
+            <button class="btn-icon del" onclick="deleteItem('studySessions','${s.id}')">${icon(IC.trash,13,'#555')}</button>
+          </div>
+        </div>`).join('')}
+    </div>`:''}
+  `:''}
+  ${tab==='timer'?`
+    <div class="card-red" style="text-align:center;padding:28px">
+      <div id="timer-display" class="mono" style="font-size:48px;font-weight:600;letter-spacing:4px;color:${timer.running?'#ff1a1a':'#fff'}">${fmtTimer(timer.secs)}</div>
+      <div class="sm" style="margin-top:8px">${timer.sub||'Selecione uma matéria'}</div>
+    </div>
+    <div class="inp-row" style="margin:12px 0">
+      <div class="lbl">Matéria</div>
+      <select class="sel" id="timer-sub" onchange="setTimerSub(this.value)">
+        <option value="">Selecione...</option>
+        ${subjects.map(s=>`<option value="${s.name}" ${timer.sub===s.name?'selected':''}>${s.name}</option>`).join('')}
+      </select>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn" style="flex:1;background:${timer.running?'#333':'#ff1a1a'}" onclick="toggleTimer()">${timer.running?'⏸ Pausar':'▶ Iniciar'}</button>
+      <button class="btn-o" onclick="resetTimer()">Reset</button>
+    </div>
+  `:''}
+  ${tab==='flashcards'?`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn-sm" onclick="openModal('addFlashcard')" style="background:#aa00ff">+ Flashcard</button>
+    </div>
+    ${flashcards.length===0?`<div class="empty-state"><div class="emoji">🃏</div><p>Nenhum flashcard</p><div class="sub">Crie perguntas e respostas</div></div>`:''}
+    ${flashcards.map(f=>`
+      <div class="card" style="cursor:pointer" onclick="toggleFlashcard('${f.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="flex:1">
+            <div style="font-size:12px;color:#555;font-family:'JetBrains Mono',monospace;margin-bottom:4px">PERGUNTA</div>
+            <div style="font-size:14px;font-weight:500">${f.q}</div>
+            ${f.open?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid #111">
+              <div style="font-size:11px;color:#00ff88;font-family:'JetBrains Mono',monospace;margin-bottom:4px">RESPOSTA</div>
+              <div style="font-size:13px;color:#ccc">${f.a}</div>
+            </div>`:''}
+          </div>
+          <div style="display:flex;gap:4px;margin-left:8px">
+            <button class="btn-icon del" onclick="event.stopPropagation();deleteItem('flashcards','${f.id}')">${icon(IC.trash,13,'#555')}</button>
+          </div>
+        </div>
+      </div>`).join('')}
+  `:''}
+  ${tab==='notas'?`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn-sm" onclick="openModal('addNote')" style="background:#aa00ff">+ Nota</button>
+    </div>
+    ${notes.length===0?`<div class="empty-state"><div class="emoji">📝</div><p>Nenhuma nota</p><div class="sub">Registre resumos das suas aulas</div></div>`:''}
+    ${notes.map(n=>`
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:600;margin-bottom:4px">${n.title}</div>
+            <div class="chip">${n.subject||'Geral'}</div>
+            <div style="font-size:13px;color:#888;margin-top:8px;line-height:1.5">${n.content}</div>
+            <div class="mono sm" style="margin-top:6px">${n.date}</div>
+          </div>
+          <button class="btn-icon del" onclick="deleteItem('studyNotes','${n.id}')">${icon(IC.trash,13,'#555')}</button>
+        </div>
+      </div>`).join('')}
+  `:''}
+  </div>`;
+}
+
+function fmtTimer(s) {
+  return `${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor((s%3600)/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+}
+
+// ═══════════════════════════════════════════════════════
+// HEALTH
+// ═══════════════════════════════════════════════════════
+function health() {
+  const tab = getTab('health','habits');
+  const habits = getKey('habits',[]);
+  const water = getKey('water',0);
+  const waterGoal = getKey('waterGoal',8);
+  const done = habits.filter(h=>h.done).length;
+  const tot = habits.length;
+  const food = getKey('foodLog',[]);
+  const imc = getKey('imc',{});
+
+  return `
+  <div class="hdr">
+    <div class="hdr-row">
+      <div class="logo">SAÚDE</div>
+      <button class="btn-sm" onclick="openModal('addHabit')" style="background:#00cc66">+ Hábito</button>
+    </div>
+    <div class="tabs">
+      ${['habits','água','alimentação','imc'].map(t=>`<button class="tab ${tab===t?'on':''}" onclick="setTab('health','${t}')">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}
+    </div>
+  </div>
+  <div class="pad">
+  ${tab==='habits'?`
+    ${tot>0?`
+    <div class="card-red">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div><div class="lbl" style="color:#ff4444">HOJE</div><div class="mono big">${done}/${tot}</div></div>
+        <div style="text-align:center">
+          <div class="raj" style="font-size:36px;color:#00ff88">${Math.round((done/tot)*100)}%</div>
+          <div class="sm">completo</div>
+        </div>
+      </div>
+      <div class="ptrack-lg"><div class="pfill-lg" style="width:${pct(done,tot)}%;background:linear-gradient(90deg,#ff1a1a,#ff6600)"></div></div>
+    </div>`:''}
+    ${habits.length===0?`<div class="empty-state"><div class="emoji">✅</div><p>Nenhum hábito</p><div class="sub">Adicione seus hábitos diários</div></div>`:''}
+    ${habits.map(h=>`
+      <div class="card" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-size:22px">${h.icon||'⭐'}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">${h.name}</div>
+          <div style="display:flex;gap:6px;align-items:center;margin-top:3px">
+            <div class="streak">${icon(IC.flame,10,'#ff6600')} ${h.streak||0} dias</div>
+            <div class="chip">${h.cat||''}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button onclick="toggleHabit('${h.id}')" style="background:none;border:none;cursor:pointer;padding:4px">
+            ${h.done?icon(IC.check,24,'#00ff88'):icon(IC.circle,24,'#1a1a1a')}
+          </button>
+          <button class="btn-icon del" onclick="deleteItem('habits','${h.id}')">${icon(IC.trash,13,'#555')}</button>
+        </div>
+      </div>`).join('')}
+  `:''}
+  ${tab==='água'?`
+    <div class="card-green" style="text-align:center;padding:24px">
+      <div style="font-size:44px;margin-bottom:8px">💧</div>
+      <div class="mono" style="font-size:48px;font-weight:700;color:#0088ff">${water}</div>
+      <div class="sm">de ${waterGoal} copos</div>
+      <div class="ptrack-lg" style="margin-top:14px"><div class="pfill-lg" style="width:${pct(water,waterGoal)}%;background:#0088ff"></div></div>
+    </div>
+    <div class="card">
+      <div class="lbl" style="margin-bottom:10px">Meta diária</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+        <input class="inp" type="number" id="water-goal-inp" value="${waterGoal}" style="max-width:80px">
+        <button class="btn-o" onclick="setWaterGoal()">Salvar meta</button>
+      </div>
+      <div class="lbl" style="margin-bottom:10px">Toque para registrar</div>
+      <div class="drops">
+        ${Array.from({length:waterGoal},(_,i)=>`<button class="drop ${i<water?'on':'off'}" onclick="toggleWater(${i})"></button>`).join('')}
+      </div>
+      <div class="mono sm" style="text-align:center;margin-top:14px">
+        ${water>=waterGoal?'🎉 Meta atingida!':` Faltam ${waterGoal-water} copo(s)`}
+      </div>
+    </div>
+  `:''}
+  ${tab==='alimentação'?`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn-sm" onclick="openModal('addFood')" style="background:#00cc66">+ Refeição</button>
+    </div>
+    ${food.length===0?`<div class="empty-state"><div class="emoji">🍽️</div><p>Nenhum registro</p><div class="sub">Registre suas refeições do dia</div></div>`:''}
+    ${food.map(f=>`
+      <div class="card" style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:24px">${f.emoji||'🍽️'}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">${f.name}</div>
+          <div class="mono sm">${f.cal||0} kcal · ${f.time||''}</div>
+        </div>
+        <button class="btn-icon del" onclick="deleteItem('foodLog','${f.id}')">${icon(IC.trash,13,'#555')}</button>
+      </div>`).join('')}
+  `:''}
+  ${tab==='imc'?`
+    <div class="card">
+      <div class="lbl" style="margin-bottom:12px">Calcular IMC</div>
+      <div class="g2" style="gap:10px;margin-bottom:10px">
+        <div><div class="lbl">Peso (kg)</div><input class="inp" type="number" id="imc-peso" placeholder="70" value="${imc.peso||''}"></div>
+        <div><div class="lbl">Altura (cm)</div><input class="inp" type="number" id="imc-alt" placeholder="175" value="${imc.alt||''}"></div>
+      </div>
+      <button class="btn" onclick="calcIMC()">Calcular</button>
+    </div>
+    ${imc.result?`
+    <div class="card-${imc.result<18.5||imc.result>=30?'red':'green'}" style="text-align:center;margin-top:10px">
+      <div class="lbl" style="display:flex;justify-content:center">SEU IMC</div>
+      <div class="raj" style="font-size:48px;color:${imc.result<18.5?'#ffcc00':imc.result<25?'#00ff88':imc.result<30?'#ff6600':'#ff1a1a'}">${imc.result}</div>
+      <div style="font-size:14px;color:#888;margin-top:4px">${imc.result<18.5?'Abaixo do peso':imc.result<25?'Peso normal ✅':imc.result<30?'Sobrepeso':'Obesidade'}</div>
+    </div>`:''}
+  `:''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// GYM
+// ═══════════════════════════════════════════════════════
+function gym() {
+  const tab = getTab('gym','treinos');
+  const workouts = getKey('workouts',[]);
+  const expanded = S.expandedWorkout;
+
+  return `
+  <div class="hdr">
+    <div class="hdr-row">
+      <div class="logo">ACADEMIA</div>
+      <button class="btn-sm" onclick="openModal('addWorkout')">+ Treino</button>
+    </div>
+    <div class="tabs">
+      ${['treinos','progresso'].map(t=>`<button class="tab ${tab===t?'on':''}" onclick="setTab('gym','${t}')">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}
+    </div>
+  </div>
+  <div class="pad">
+  ${tab==='treinos'?`
+    <div class="g3" style="margin-bottom:12px">
+      ${[
+        {l:'Treinos',v:workouts.length,c:'#ff1a1a'},
+        {l:'Exercícios',v:workouts.reduce((s,w)=>s+(w.exercises||[]).length,0),c:'#aa00ff'},
+        {l:'Este mês',v:workouts.filter(w=>w.date&&w.date.slice(0,7)===todayISO().slice(0,7)).length,c:'#00ff88'},
+      ].map(m=>`<div class="card" style="text-align:center"><div class="mono" style="font-size:20px;font-weight:700;color:${m.c}">${m.v}</div><div class="mono sm">${m.l}</div></div>`).join('')}
+    </div>
+    ${workouts.length===0?`<div class="empty-state"><div class="emoji">💪</div><p>Nenhum treino</p><div class="sub">Registre seus treinos</div></div>`:''}
+    ${workouts.map(w=>`
+      <div class="card" style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleWorkoutExpand('${w.id}')">
+          <div>
+            <div style="font-size:14px;font-weight:700">${w.name}</div>
+            <div class="mono sm">${w.date} · ${w.dur||0}min · ${(w.exercises||[]).length} exercícios</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button class="btn-icon del" onclick="event.stopPropagation();deleteItem('workouts','${w.id}')">${icon(IC.trash,13,'#555')}</button>
+            ${expanded===w.id?icon(IC.chevU,16,'#444'):icon(IC.chevD,16,'#444')}
+          </div>
+        </div>
+        ${expanded===w.id?`
+          <div style="margin-top:12px;border-top:1px solid #0d0d0d;padding-top:12px">
+            ${(w.exercises||[]).map(ex=>`
+              <div style="background:#060606;border-radius:10px;padding:10px;margin-bottom:8px">
+                <div style="font-size:13px;font-weight:600;color:#ff1a1a;margin-bottom:6px">${ex.name}</div>
+                ${(ex.sets||[]).map((st,i)=>`
+                  <div style="display:flex;gap:12px;padding:4px 0;border-top:1px solid #0d0d0d;font-size:12px">
+                    <span class="mono" style="color:#444">#${i+1}</span>
+                    <span class="mono">${st.r} reps</span>
+                    <span class="mono" style="color:#ff6600">${st.w}kg</span>
+                  </div>`).join('')}
+              </div>`).join('')}
+          </div>`:''}
+      </div>`).join('')}
+  `:''}
+  ${tab==='progresso'?`
+    ${workouts.length===0?`<div class="empty-state"><div class="emoji">📈</div><p>Sem dados ainda</p><div class="sub">Registre treinos para ver progresso</div></div>`:`
+    <div class="sec">Volume por treino</div>
+    <div class="card">
+      ${barChart(workouts.slice(-7).map(w=>({day:w.name.slice(0,3),hours:((w.exercises||[]).reduce((s,e)=>(e.sets||[]).reduce((ss,st)=>ss+st.r*st.w,s),0)/100).toFixed(1)})),'hours','#ff1a1a','day')}
+    </div>
+    <div class="sec">Recordes (maior peso)</div>
+    <div class="card">
+      ${Object.entries(workouts.reduce((acc,w)=>{
+        (w.exercises||[]).forEach(e=>{
+          (e.sets||[]).forEach(s=>{
+            if(!acc[e.name]||s.w>acc[e.name]) acc[e.name]=s.w;
+          });
+        });
+        return acc;
+      },{})).slice(0,5).map(([name,w])=>`
+        <div class="row">
+          <div style="flex:1;font-size:13px">${name}</div>
+          <div class="mono" style="color:#ffcc00;font-size:14px;font-weight:700">${w}kg</div>
+        </div>`).join('')}
+    </div>`}
+  `:''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// GARAGE (STARTUP)
+// ═══════════════════════════════════════════════════════
+function garage() {
+  const tab = getTab('garage','cars');
+  // Use shared data for startup
+  const sharedProfile = S.profile === 'startup' ? 'startup' : 'startup';
+  const sharedData = getProfile('startup');
+  const cars = sharedData.cars || [];
+  const meetings = sharedData.meetings || [];
+  const suppliers = sharedData.suppliers || [];
+  const vision = sharedData.companyVision || {};
+  const portfolio = sharedData.portfolio || [];
+  const calendar = sharedData.sharedCalendar || [];
+
+  const income = cars.filter(c=>c.status==='vendido').reduce((s,c)=>s+(Number(c.salePrice)||0)-(Number(c.buyPrice)||0)-(Number(c.reformCost)||0),0);
+  const active = cars.filter(c=>c.status!=='vendido').length;
+
+  return `
+  <div class="hdr">
+    <div class="hdr-row">
+      <div class="logo" style="color:#00ff88">GARAGE</div>
+      <button class="btn-sm" style="background:#00cc66" onclick="openModal('addCar')">+ Carro</button>
+    </div>
+    <div class="tabs">
+      ${['cars','reuniões','fornecedores','visão','calendário','portfólio'].map(t=>`<button class="tab ${tab===t?'on':''}" onclick="setTab('garage','${t}')">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}
+    </div>
+  </div>
+  <div class="pad">
+  ${tab==='cars'?`
+    <div class="card-green" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="lbl" style="color:#00ff88">LUCRO TOTAL</div>
+        <div class="mono big">${fmtR(income)}</div>
+        <div style="margin-top:8px;display:flex;gap:6px">
+          <span class="badge b-green">${active} ativos</span>
+          <span class="badge b-yellow">${cars.filter(c=>c.status==='vendido').length} vendidos</span>
+        </div>
+      </div>
+      ${icon(IC.car,44,'#00ff88')}
+    </div>
+    ${cars.length===0?`<div class="empty-state"><div class="emoji">🚗</div><p>Nenhum carro</p><div class="sub">Cadastre o primeiro carro</div></div>`:''}
+    ${cars.map(c=>`
+      <div class="card" style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <div style="font-size:15px;font-weight:700">${c.name}</div>
+              <span class="tag ${c.status==='vendido'?'tag-green':c.status==='pronto'?'tag-blue':c.status==='reforma'?'tag-yellow':'tag-gray'}">${c.status||'avaliação'}</span>
+            </div>
+            <div class="mono sm">${c.model||''} ${c.year||''}</div>
+            <div style="display:flex;gap:12px;margin-top:8px">
+              <div><div class="lbl">Compra</div><div class="mono" style="font-size:12px;color:#ff4444">-${fmtR(Number(c.buyPrice)||0)}</div></div>
+              <div><div class="lbl">Reforma</div><div class="mono" style="font-size:12px;color:#ff6600">-${fmtR(Number(c.reformCost)||0)}</div></div>
+              ${c.status==='vendido'?`<div><div class="lbl">Venda</div><div class="mono" style="font-size:12px;color:#00ff88">+${fmtR(Number(c.salePrice)||0)}</div></div>`:''}
+            </div>
+            ${c.status==='vendido'?`<div class="mono" style="margin-top:6px;font-size:13px;color:${income>=0?'#00ff88':'#ff4444'}">Lucro: ${fmtR((Number(c.salePrice)||0)-(Number(c.buyPrice)||0)-(Number(c.reformCost)||0))}</div>`:''}
+            ${c.deadline?`<div class="mono sm" style="margin-top:4px">📅 Entrega: ${c.deadline}</div>`:''}
+          </div>
+          <div style="display:flex;gap:4px;margin-left:8px">
+            <button class="btn-icon" onclick="openModal('editCar','${c.id}')">${icon(IC.edit,13,'#555')}</button>
+            <button class="btn-icon del" onclick="deleteGarageItem('cars','${c.id}')">${icon(IC.trash,13,'#555')}</button>
+          </div>
+        </div>
+      </div>`).join('')}
+    <div class="sec">Calculadora de Reforma</div>
+    <div class="card">
+      <div class="g2" style="gap:8px;margin-bottom:10px">
+        <div><div class="lbl">Custo compra</div><input class="inp" type="number" id="calc-buy" placeholder="0"></div>
+        <div><div class="lbl">Custo reforma</div><input class="inp" type="number" id="calc-reform" placeholder="0"></div>
+      </div>
+      <div class="g2" style="gap:8px;margin-bottom:10px">
+        <div><div class="lbl">Preço de venda</div><input class="inp" type="number" id="calc-sell" placeholder="0"></div>
+        <div><div class="lbl">Lucro esperado</div><div id="calc-result" class="mono" style="font-size:18px;color:#00ff88;padding:12px 0">R$0,00</div></div>
+      </div>
+      <button class="btn" style="background:#00cc66" onclick="calcReform()">Calcular Lucro</button>
+    </div>
+  `:''}
+  ${tab==='reuniões'?`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn-sm" style="background:#00cc66" onclick="openModal('addMeeting')">+ Reunião</button>
+    </div>
+    ${meetings.length===0?`<div class="empty-state"><div class="emoji">📅</div><p>Nenhuma reunião</p><div class="sub">Agende suas reuniões</div></div>`:''}
+    ${meetings.map(m=>`
+      <div class="card" style="margin-bottom:8px;border-color:${new Date(m.datetime)>new Date()?'#ffcc0033':'#1a1a1a'}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700">${m.title}</div>
+            <div class="mono sm" style="margin-top:4px">${icon(IC.calendar,11,'#555')} ${m.datetime}</div>
+            ${m.agenda?`<div style="font-size:12px;color:#777;margin-top:6px">${m.agenda}</div>`:''}
+            ${new Date(m.datetime)>new Date()?`<span class="badge b-yellow" style="margin-top:6px">Próxima</span>`:`<span class="badge b-gray" style="margin-top:6px;background:#1a1a1a;color:#555;border:1px solid #222">Concluída</span>`}
+          </div>
+          <button class="btn-icon del" onclick="deleteGarageItem('meetings','${m.id}')">${icon(IC.trash,13,'#555')}</button>
+        </div>
+      </div>`).join('')}
+  `:''}
+  ${tab==='fornecedores'?`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn-sm" style="background:#00cc66" onclick="openModal('addSupplier')">+ Fornecedor</button>
+    </div>
+    ${suppliers.length===0?`<div class="empty-state"><div class="emoji">📦</div><p>Nenhum fornecedor</p><div class="sub">Cadastre peças e fornecedores</div></div>`:''}
+    ${suppliers.map(s=>`
+      <div class="card" style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:600">${s.name}</div>
+            <div class="chip" style="margin-top:4px">${s.category||'Geral'}</div>
+            ${s.contact?`<div class="mono sm" style="margin-top:4px">📱 ${s.contact}</div>`:''}
+            ${s.notes?`<div style="font-size:12px;color:#777;margin-top:4px">${s.notes}</div>`:''}
+          </div>
+          <button class="btn-icon del" onclick="deleteGarageItem('suppliers','${s.id}')">${icon(IC.trash,13,'#555')}</button>
+        </div>
+      </div>`).join('')}
+  `:''}
+  ${tab==='visão'?`
+    <div class="card-green" style="text-align:center;padding:20px">
+      ${icon(IC.flash,32,'#00ff88')}
+      <div class="raj" style="font-size:18px;margin-top:8px;letter-spacing:2px">NOSSA EMPRESA</div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="lbl">🎯 VISÃO</div>
+        <button class="btn-sm-o" onclick="openModal('editVision')">Editar</button>
+      </div>
+      <div style="font-size:13px;color:#888;line-height:1.6">${vision.visao||'<span style="color:#2a2a2a">Defina a visão da empresa...</span>'}</div>
+    </div>
+    <div class="card">
+      <div class="lbl" style="margin-bottom:8px">🚀 MISSÃO</div>
+      <div style="font-size:13px;color:#888;line-height:1.6">${vision.missao||'<span style="color:#2a2a2a">Defina a missão da empresa...</span>'}</div>
+    </div>
+    <div class="card">
+      <div class="lbl" style="margin-bottom:8px">💎 VALORES</div>
+      <div style="font-size:13px;color:#888;line-height:1.6">${vision.valores||'<span style="color:#2a2a2a">Defina os valores da empresa...</span>'}</div>
+    </div>
+    <div class="card">
+      <div class="lbl" style="margin-bottom:8px">📋 REGRAS</div>
+      <div style="font-size:13px;color:#888;line-height:1.6">${vision.regras||'<span style="color:#2a2a2a">Defina as regras da empresa...</span>'}</div>
+    </div>
+  `:''}
+  ${tab==='calendário'?`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn-sm" style="background:#00cc66" onclick="openModal('addCalendarEvent')">+ Compromisso</button>
+    </div>
+    ${calendar.length===0?`<div class="empty-state"><div class="emoji">📆</div><p>Nenhum compromisso</p><div class="sub">Adicione compromissos compartilhados</div></div>`:''}
+    ${[...calendar].sort((a,b)=>new Date(a.date)-new Date(b.date)).map(e=>`
+      <div class="card" style="border-color:${new Date(e.date)>new Date()?'#00ff8833':'#1a1a1a'}">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:600">${e.title}</div>
+            <div class="mono sm" style="margin-top:4px">${e.date} ${e.time||''}</div>
+            ${e.desc?`<div style="font-size:12px;color:#777;margin-top:4px">${e.desc}</div>`:''}
+          </div>
+          <button class="btn-icon del" onclick="deleteGarageItem('sharedCalendar','${e.id}')">${icon(IC.trash,13,'#555')}</button>
+        </div>
+      </div>`).join('')}
+  `:''}
+  ${tab==='portfólio'?`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn-sm" style="background:#00cc66" onclick="openModal('addPortfolio')">+ Adicionar</button>
+    </div>
+    ${portfolio.length===0?`<div class="empty-state"><div class="emoji">🏆</div><p>Portfólio vazio</p><div class="sub">Mostre os carros reformados</div></div>`:''}
+    ${portfolio.map(p=>`
+      <div class="card" style="margin-bottom:8px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">${p.name}</div>
+        <div class="chip">${p.year||''}</div>
+        ${p.desc?`<div style="font-size:12px;color:#777;margin-top:8px;line-height:1.5">${p.desc}</div>`:''}
+        <div style="display:flex;gap:10px;margin-top:8px">
+          ${p.before?`<div class="tag tag-red">Antes: ${p.before}</div>`:''}
+          ${p.after?`<div class="tag tag-green">Depois: ${p.after}</div>`:''}
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px">
+          <button class="btn-icon del" onclick="deleteGarageItem('portfolio','${p.id}')">${icon(IC.trash,13,'#555')}</button>
+        </div>
+      </div>`).join('')}
+  `:''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// LOANS (PIETRO ONLY)
+// ═══════════════════════════════════════════════════════
+function loans() {
+  const tab = getTab('loans','lista');
+  const loanList = getKey('loans',[]);
+  const totalLent = loanList.reduce((s,l)=>s+(Number(l.amount)||0),0);
+  const totalReceive = loanList.filter(l=>l.status!=='quitado').reduce((s,l)=>s+(Number(l.totalReceive)||0),0);
+
+  return `
+  <div class="hdr">
+    <div class="hdr-row">
+      <div class="logo" style="color:#0088ff">EMPRÉSTIMOS</div>
+      <button class="btn-sm" style="background:#0088ff" onclick="openModal('addLoan')">+ Empréstimo</button>
+    </div>
+    <div class="tabs">
+      ${['lista','resumo'].map(t=>`<button class="tab ${tab===t?'on':''}" onclick="setTab('loans','${t}')">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}
+    </div>
+  </div>
+  <div class="pad">
+  ${tab==='lista'?`
+    <div class="card-blue" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="lbl" style="color:#0088ff">A RECEBER</div>
+        <div class="mono big">${fmtR(totalReceive)}</div>
+        <div class="sm" style="margin-top:4px">Emprestado: ${fmtR(totalLent)}</div>
+      </div>
+      ${icon(IC.money,44,'#0088ff')}
+    </div>
+    ${loanList.length===0?`<div class="empty-state"><div class="emoji">💰</div><p>Nenhum empréstimo</p><div class="sub">Registre seus empréstimos</div></div>`:''}
+    ${loanList.map(l=>`
+      <div class="card" style="margin-bottom:8px;border-color:${l.status==='quitado'?'#00ff8822':l.status==='atrasado'?'#ff1a1a33':'#0088ff22'}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <div style="font-size:15px;font-weight:700">${l.clientName}</div>
+              <span class="tag ${l.status==='quitado'?'tag-green':l.status==='atrasado'?'tag-red':'tag-blue'}">${l.status||'em dia'}</span>
+              ${l.score?`<span style="font-size:16px">${l.score>=4?'⭐⭐⭐⭐⭐':l.score>=3?'⭐⭐⭐⭐':l.score>=2?'⭐⭐⭐':l.score>=1?'⭐⭐':'⭐'}</span>`:''}
+            </div>
+            ${l.clientContact?`<div class="mono sm">📱 ${l.clientContact}</div>`:''}
+            <div style="display:flex;gap:12px;margin-top:8px">
+              <div><div class="lbl">Emprestado</div><div class="mono" style="font-size:13px;color:#ff4444">-${fmtR(Number(l.amount)||0)}</div></div>
+              <div><div class="lbl">Juros</div><div class="mono" style="font-size:13px;color:#ffcc00">${l.interest||0}%</div></div>
+              <div><div class="lbl">A receber</div><div class="mono" style="font-size:13px;color:#00ff88">+${fmtR(Number(l.totalReceive)||0)}</div></div>
+            </div>
+            ${l.dueDate?`<div class="mono sm" style="margin-top:4px">📅 Vence: ${l.dueDate}</div>`:''}
+            ${l.notes?`<div style="font-size:12px;color:#777;margin-top:4px">${l.notes}</div>`:''}
+          </div>
+          <div style="display:flex;gap:4px;margin-left:8px">
+            <button class="btn-icon" onclick="openModal('editLoan','${l.id}')">${icon(IC.edit,13,'#555')}</button>
+            <button class="btn-icon del" onclick="deleteItem('loans','${l.id}')">${icon(IC.trash,13,'#555')}</button>
+          </div>
+        </div>
+      </div>`).join('')}
+  `:''}
+  ${tab==='resumo'?`
+    <div class="g2">
+      <div class="card" style="text-align:center">
+        <div class="lbl">TOTAL</div>
+        <div class="mono" style="font-size:18px;color:#0088ff">${loanList.length}</div>
+        <div class="sm">empréstimos</div>
+      </div>
+      <div class="card" style="text-align:center">
+        <div class="lbl">QUITADOS</div>
+        <div class="mono" style="font-size:18px;color:#00ff88">${loanList.filter(l=>l.status==='quitado').length}</div>
+        <div class="sm">clientes</div>
+      </div>
+      <div class="card" style="text-align:center">
+        <div class="lbl">ATRASADOS</div>
+        <div class="mono" style="font-size:18px;color:#ff4444">${loanList.filter(l=>l.status==='atrasado').length}</div>
+        <div class="sm">clientes</div>
+      </div>
+      <div class="card" style="text-align:center">
+        <div class="lbl">EM DIA</div>
+        <div class="mono" style="font-size:18px;color:#ffcc00">${loanList.filter(l=>l.status==='em dia').length}</div>
+        <div class="sm">clientes</div>
+      </div>
+    </div>
+  `:''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// READING
+// ═══════════════════════════════════════════════════════
+function reading() {
+  const tab = getTab('reading','lendo');
+  const books = getKey('books',[]);
+  const reading_now = books.filter(b=>b.status==='lendo');
+  const toRead = books.filter(b=>b.status==='para ler');
+  const read = books.filter(b=>b.status==='lido');
+
+  return `
+  <div class="hdr">
+    <div class="hdr-row">
+      <div class="logo">LEITURA</div>
+      <button class="btn-sm" onclick="openModal('addBook')" style="background:#ffcc00;color:#000">+ Livro</button>
+    </div>
+    <div class="tabs">
+      ${['lendo','para ler','lidos'].map(t=>`<button class="tab ${tab===t?'on':''}" onclick="setTab('reading','${t}')">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}
+    </div>
+  </div>
+  <div class="pad">
+    <div class="g3" style="margin-bottom:12px">
+      <div class="card" style="text-align:center"><div class="mono" style="font-size:20px;font-weight:700;color:#ffcc00">${read.length}</div><div class="mono sm">Lidos</div></div>
+      <div class="card" style="text-align:center"><div class="mono" style="font-size:20px;font-weight:700;color:#0088ff">${reading_now.length}</div><div class="mono sm">Lendo</div></div>
+      <div class="card" style="text-align:center"><div class="mono" style="font-size:20px;font-weight:700;color:#555">${toRead.length}</div><div class="mono sm">Na fila</div></div>
+    </div>
+
+  ${tab==='lendo'?`
+    ${reading_now.length===0?`<div class="empty-state"><div class="emoji">📖</div><p>Nenhum livro em leitura</p><div class="sub">Adicione um livro e marque como "lendo"</div></div>`:''}
+    ${reading_now.map(b=>`
+      <div class="card" style="border-color:#ffcc0033">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div style="flex:1">
+            <div style="font-size:15px;font-weight:700">${b.title}</div>
+            <div style="font-size:12px;color:#555;margin-top:2px">${b.author||''}</div>
+          </div>
+          <div style="display:flex;gap:4px">
+            <button class="btn-icon" onclick="openModal('editBook','${b.id}')">${icon(IC.edit,13,'#555')}</button>
+            <button class="btn-icon del" onclick="deleteItem('books','${b.id}')">${icon(IC.trash,13,'#555')}</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;margin-bottom:10px">
+          <div><div class="lbl">Página atual</div><div class="mono" style="font-size:16px;color:#ffcc00">${b.currentPage||0}</div></div>
+          <div><div class="lbl">Total</div><div class="mono" style="font-size:16px">${b.totalPages||0}</div></div>
+          <div><div class="lbl">Meta/dia</div><div class="mono" style="font-size:16px;color:#00ff88">${b.dailyGoal||0}p</div></div>
+        </div>
+        <div class="ptrack-lg" style="margin-bottom:6px"><div class="pfill-lg" style="width:${pct(b.currentPage||0,b.totalPages||1)}%;background:#ffcc00"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px">
+          <span class="mono" style="color:#555">${pct(b.currentPage||0,b.totalPages||1)}%</span>
+          <span class="mono" style="color:#555">Faltam ${Math.max(0,(b.totalPages||0)-(b.currentPage||0))} páginas</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <input class="inp" type="number" id="page-inp-${b.id}" placeholder="Página atual" style="flex:1">
+          <button class="btn-o" onclick="updatePage('${b.id}')">Atualizar</button>
+        </div>
+      </div>`).join('')}
+  `:''}
+  ${tab==='para ler'?`
+    ${toRead.length===0?`<div class="empty-state"><div class="emoji">📚</div><p>Lista vazia</p><div class="sub">Adicione livros que quer ler</div></div>`:''}
+    ${toRead.map(b=>`
+      <div class="card" style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:24px">📕</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">${b.title}</div>
+          <div style="font-size:11px;color:#555">${b.author||''}</div>
+        </div>
+        <div style="display:flex;gap:4px">
+          <button class="btn-icon" onclick="openModal('editBook','${b.id}')">${icon(IC.edit,13,'#555')}</button>
+          <button class="btn-icon del" onclick="deleteItem('books','${b.id}')">${icon(IC.trash,13,'#555')}</button>
+        </div>
+      </div>`).join('')}
+  `:''}
+  ${tab==='lidos'?`
+    ${read.length===0?`<div class="empty-state"><div class="emoji">✅</div><p>Nenhum livro lido</p><div class="sub">Conclua um livro para aparecer aqui</div></div>`:''}
+    ${read.map(b=>`
+      <div class="card" style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:24px">✅</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">${b.title}</div>
+          <div style="font-size:11px;color:#555">${b.author||''} · ${b.totalPages||0}p</div>
+        </div>
+        <button class="btn-icon del" onclick="deleteItem('books','${b.id}')">${icon(IC.trash,13,'#555')}</button>
+      </div>`).join('')}
+  `:''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// ROUTINE
+// ═══════════════════════════════════════════════════════
+function routine() {
+  const routineItems = getKey('routine',[]);
+  const journal = getKey('journal',[]);
+  const tab = getTab('routine','rotina');
+
+  return `
+  <div class="hdr">
+    <div class="hdr-row">
+      <div class="logo">ROTINA</div>
+      <button class="btn-sm" onclick="openModal('addRoutineItem')">+ Adicionar</button>
+    </div>
+    <div class="tabs">
+      ${['rotina','diário'].map(t=>`<button class="tab ${tab===t?'on':''}" onclick="setTab('routine','${t}')">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}
+    </div>
+  </div>
+  <div class="pad">
+  ${tab==='rotina'?`
+    ${routineItems.length===0?`<div class="empty-state"><div class="emoji">⏰</div><p>Nenhum item na rotina</p><div class="sub">Organize seu dia a dia</div></div>`:''}
+    ${[...routineItems].sort((a,b)=>a.time?.localeCompare(b.time)||0).map(r=>`
+      <div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <div style="text-align:center;min-width:44px">
+          <div class="mono" style="font-size:13px;font-weight:700;color:#ff1a1a">${r.time||''}</div>
+        </div>
+        <div style="width:1px;height:40px;background:#111"></div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">${r.title}</div>
+          ${r.desc?`<div class="sm">${r.desc}</div>`:''}
+        </div>
+        <button class="btn-icon del" onclick="deleteItem('routine','${r.id}')">${icon(IC.trash,13,'#555')}</button>
+      </div>`).join('')}
+  `:''}
+  ${tab==='diário'?`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn-sm" onclick="openModal('addJournal')">+ Entrada</button>
+    </div>
+    ${journal.length===0?`<div class="empty-state"><div class="emoji">📔</div><p>Diário vazio</p><div class="sub">Registre seus pensamentos e conquistas</div></div>`:''}
+    ${journal.map(j=>`
+      <div class="card" style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="flex:1">
+            <div class="mono sm" style="margin-bottom:6px">${j.date}</div>
+            <div style="font-size:13px;color:#ccc;line-height:1.6">${j.content}</div>
+            ${j.mood?`<div style="margin-top:8px;font-size:20px">${j.mood}</div>`:''}
+          </div>
+          <button class="btn-icon del" onclick="deleteItem('journal','${j.id}')">${icon(IC.trash,13,'#555')}</button>
+        </div>
+      </div>`).join('')}
+  `:''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// VISION BOARD
+// ═══════════════════════════════════════════════════════
+function vision() {
+  const visionItems = getKey('visionBoard',[]);
+  const goals = getKey('goals',[]);
+  const tab = getTab('vision','board');
+
+  return `
+  <div class="hdr">
+    <div class="hdr-row">
+      <div class="logo">VISÃO</div>
+      <button class="btn-sm" onclick="openModal('addVisionItem')" style="background:#aa00ff">+ Adicionar</button>
+    </div>
+    <div class="tabs">
+      ${['board','metas'].map(t=>`<button class="tab ${tab===t?'on':''}" onclick="setTab('vision','${t}')">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}
+    </div>
+  </div>
+  <div class="pad">
+  ${tab==='board'?`
+    <div class="card" style="background:linear-gradient(135deg,#0d0010,#080808);border-color:#aa00ff22;text-align:center;padding:20px">
+      ${icon(IC.star,28,'#aa00ff')}
+      <div class="raj" style="font-size:16px;margin-top:8px;letter-spacing:2px;color:#aa00ff">VISION BOARD</div>
+      <div class="sm" style="margin-top:4px">Visualize seus sonhos</div>
+    </div>
+    ${visionItems.length===0?`<div class="empty-state"><div class="emoji">🌟</div><p>Nenhum sonho adicionado</p><div class="sub">Adicione suas metas e sonhos grandes</div></div>`:''}
+    ${visionItems.map(v=>`
+      <div class="card" style="border-color:#aa00ff22;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="flex:1">
+            <div style="font-size:28px;margin-bottom:8px">${v.emoji||'🌟'}</div>
+            <div style="font-size:15px;font-weight:700;color:#aa00ff">${v.title}</div>
+            ${v.desc?`<div style="font-size:13px;color:#777;margin-top:6px;line-height:1.5">${v.desc}</div>`:''}
+            ${v.deadline?`<div class="mono sm" style="margin-top:6px">📅 ${v.deadline}</div>`:''}
+          </div>
+          <button class="btn-icon del" onclick="deleteItem('visionBoard','${v.id}')">${icon(IC.trash,13,'#555')}</button>
+        </div>
+      </div>`).join('')}
+  `:''}
+  ${tab==='metas'?`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn-sm" onclick="openModal('addGoal')" style="background:#aa00ff">+ Meta</button>
+    </div>
+    ${goals.length===0?`<div class="empty-state"><div class="emoji">🎯</div><p>Nenhuma meta</p><div class="sub">Defina suas metas de vida</div></div>`:''}
+    ${goals.map(g=>`
+      <div class="card" style="margin-bottom:8px;border-color:${g.color||'#aa00ff'}22">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700">${g.title}</div>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <div class="chip">${g.cat||''}</div>
+              <div class="chip">${g.period||''}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="raj" style="font-size:24px;color:${g.color||'#aa00ff'}">${pct(g.cur||0,g.target||1)}%</div>
+            <button class="btn-icon del" onclick="deleteItem('goals','${g.id}')">${icon(IC.trash,13,'#555')}</button>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px">
+          <span class="mono" style="color:#777">${fmtN(g.cur||0)}${g.unit}</span>
+          <span class="mono sm">${fmtN(g.target||0)}${g.unit}</span>
+        </div>
+        <div class="ptrack-lg"><div class="pfill-lg" style="width:${pct(g.cur||0,g.target||1)}%;background:${g.color||'#aa00ff'}"></div></div>
+      </div>`).join('')}
+  `:''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// NAV RENDER
+// ═══════════════════════════════════════════════════════
+function renderNav() {
+  const isStartup = S.profile === 'startup';
+  const isPietro = S.profile === 'pietro';
+  const color = {david:'#ff1a1a', pietro:'#0088ff', startup:'#00ff88'}[S.profile];
+
+  let navItems;
+  if (isStartup) {
+    navItems = [
+      {id:'dash',label:'Home',ic:IC.home},
+      {id:'garage',label:'Garage',ic:IC.car},
+      {id:'vision',label:'Visão',ic:IC.star},
+    ];
+  } else {
+    navItems = [
+      {id:'dash',label:'Home',ic:IC.home},
+      {id:'finance',label:'Finanças',ic:IC.wallet},
+      {id:'health',label:'Saúde',ic:IC.heart},
+      {id:'study',label:'Estudos',ic:IC.book},
+      {id:'gym',label:'Gym',ic:IC.gym},
+      {id:'reading',label:'Livros',ic:IC.journal},
+      {id:'routine',label:'Rotina',ic:IC.routine},
+      {id:'vision',label:'Sonhos',ic:IC.star},
+      ...(isPietro?[{id:'loans',label:'Crédito',ic:IC.money}]:[]),
+      {id:'garage',label:'Startup',ic:IC.car},
+    ];
+  }
+
+  $('nav').innerHTML = navItems.map(n=>`
+    <button class="ni ${S.screen===n.id?'on':''}" onclick="go('${n.id}')">
+      ${icon(n.ic,19,S.screen===n.id?color:'#2a2a2a')}
+      <span>${n.label}</span>
+    </button>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════════════
+function openModal(type, id) {
+  S.modal = type;
+  S.editing = id || null;
+  render();
+}
+function closeModal() { S.modal = null; S.editing = null; render(); }
+
+function renderModal() {
+  let html = '';
+  const cats = ['Alimentação','Moradia','Transporte','Lazer','Saúde','Educação','Salário','Renda Extra','Outros'];
+  const accounts = getKey('accounts',[]);
+  const subjects = getKey('subjects',[]);
+  const sharedData = getProfile('startup');
+
+  // Edit helpers
+  const getEdit = (key) => {
+    if (!S.editing) return null;
+    const list = getKey(key,[]);
+    return list.find(i=>i.id===S.editing);
+  };
+
+  switch(S.modal) {
+    case 'addAccount': {
+      const e = getEdit('accounts');
+      html = `<div class="modal-hdr"><div class="modal-title">${e?'EDITAR':'NOVA'} CONTA</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Nome</div><input class="inp" id="m-name" placeholder="Ex: Nubank" value="${e?e.name:''}"></div>
+        <div class="inp-row"><div class="lbl">Tipo</div><select class="sel" id="m-type"><option ${e?.type==='personal'?'selected':''}>personal</option><option ${e?.type==='business'?'selected':''}>business</option><option ${e?.type==='savings'?'selected':''}>savings</option><option ${e?.type==='investments'?'selected':''}>investments</option></select></div>
+        <div class="inp-row"><div class="lbl">Saldo inicial</div><input class="inp" type="number" id="m-bal" placeholder="0,00" value="${e?e.balance:''}"></div>
+        <div class="inp-row"><div class="lbl">Cor</div><select class="sel" id="m-color"><option value="#ff1a1a">Vermelho</option><option value="#0088ff">Azul</option><option value="#00ff88">Verde</option><option value="#aa00ff">Roxo</option><option value="#ffcc00">Amarelo</option></select></div>
+        <button class="btn" onclick="saveAccount()">${e?'Salvar':'Adicionar'} Conta</button>`;
+      break;
+    }
+    case 'editAccount': html = ''; S.modal = 'addAccount'; renderModal(); return;
+    case 'addTx': {
+      html = `<div class="modal-hdr"><div class="modal-title">NOVA TRANSAÇÃO</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <button id="btn-exp" class="tab on" onclick="document.getElementById('m-txtype').value='expense';this.className='tab on';document.getElementById('btn-inc').className='tab'" style="flex:1;text-align:center">Despesa</button>
+          <button id="btn-inc" class="tab" onclick="document.getElementById('m-txtype').value='income';this.className='tab on';document.getElementById('btn-exp').className='tab'" style="flex:1;text-align:center">Receita</button>
+        </div>
+        <input type="hidden" id="m-txtype" value="expense">
+        <div class="inp-row"><div class="lbl">Descrição</div><input class="inp" id="m-desc" placeholder="Ex: Almoço"></div>
+        <div class="inp-row"><div class="lbl">Valor (R$)</div><input class="inp" type="number" id="m-amount" placeholder="0,00"></div>
+        <div class="inp-row"><div class="lbl">Categoria</div><select class="sel" id="m-cat">${cats.map(c=>`<option>${c}</option>`).join('')}</select></div>
+        <div class="inp-row"><div class="lbl">Conta</div><select class="sel" id="m-acc">${accounts.map(a=>`<option value="${a.id}">${a.name}</option>`).join('')}</select></div>
+        <button class="btn" onclick="saveTx()">Adicionar Transação</button>`;
+      break;
+    }
+    case 'addSubject': {
+      html = `<div class="modal-hdr"><div class="modal-title">NOVA MATÉRIA</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Nome</div><input class="inp" id="m-name" placeholder="Ex: Mecânica"></div>
+        <div class="inp-row"><div class="lbl">Meta semanal (horas)</div><input class="inp" type="number" id="m-goal" placeholder="5"></div>
+        <div class="inp-row"><div class="lbl">Cor</div><select class="sel" id="m-color"><option value="#0088ff">Azul</option><option value="#aa00ff">Roxo</option><option value="#00ff88">Verde</option><option value="#ffcc00">Amarelo</option><option value="#ff1a1a">Vermelho</option></select></div>
+        <button class="btn" style="background:#aa00ff" onclick="saveSubject()">Adicionar Matéria</button>`;
+      break;
+    }
+    case 'addSession': {
+      html = `<div class="modal-hdr"><div class="modal-title">NOVA SESSÃO</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Matéria</div><select class="sel" id="m-sub"><option value="">Selecione...</option>${subjects.map(s=>`<option>${s.name}</option>`).join('')}</select></div>
+        <div class="inp-row"><div class="lbl">Duração (min)</div><input class="inp" type="number" id="m-dur" placeholder="60"></div>
+        <div class="inp-row"><div class="lbl">Notas</div><input class="inp" id="m-notes" placeholder="O que você estudou?"></div>
+        <button class="btn" style="background:#aa00ff" onclick="saveSession()">Registrar Sessão</button>`;
+      break;
+    }
+    case 'addFlashcard': {
+      html = `<div class="modal-hdr"><div class="modal-title">NOVO FLASHCARD</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Pergunta</div><textarea class="textarea" id="m-q" placeholder="Digite a pergunta..."></textarea></div>
+        <div class="inp-row"><div class="lbl">Resposta</div><textarea class="textarea" id="m-a" placeholder="Digite a resposta..."></textarea></div>
+        <button class="btn" style="background:#aa00ff" onclick="saveFlashcard()">Criar Flashcard</button>`;
+      break;
+    }
+    case 'addNote': {
+      html = `<div class="modal-hdr"><div class="modal-title">NOVA NOTA</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Título</div><input class="inp" id="m-title" placeholder="Resumo de Mecânica..."></div>
+        <div class="inp-row"><div class="lbl">Matéria</div><select class="sel" id="m-sub"><option value="">Geral</option>${subjects.map(s=>`<option>${s.name}</option>`).join('')}</select></div>
+        <div class="inp-row"><div class="lbl">Conteúdo</div><textarea class="textarea" id="m-content" placeholder="Escreva seu resumo..." style="min-height:120px"></textarea></div>
+        <button class="btn" style="background:#aa00ff" onclick="saveNote()">Salvar Nota</button>`;
+      break;
+    }
+    case 'addHabit': {
+      html = `<div class="modal-hdr"><div class="modal-title">NOVO HÁBITO</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Nome</div><input class="inp" id="m-name" placeholder="Ex: Meditação"></div>
+        <div class="inp-row"><div class="lbl">Emoji</div><input class="inp" id="m-icon" placeholder="⭐" value="⭐"></div>
+        <div class="inp-row"><div class="lbl">Categoria</div><select class="sel" id="m-cat">${['Saúde','Mente','Educação','Dieta','Fitness','Social'].map(c=>`<option>${c}</option>`).join('')}</select></div>
+        <button class="btn" style="background:#00cc66" onclick="saveHabit()">Criar Hábito</button>`;
+      break;
+    }
+    case 'addFood': {
+      html = `<div class="modal-hdr"><div class="modal-title">NOVA REFEIÇÃO</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Nome</div><input class="inp" id="m-name" placeholder="Ex: Almoço"></div>
+        <div class="inp-row"><div class="lbl">Emoji</div><input class="inp" id="m-emoji" placeholder="🍽️" value="🍽️"></div>
+        <div class="g2" style="gap:8px">
+          <div class="inp-row"><div class="lbl">Calorias</div><input class="inp" type="number" id="m-cal" placeholder="500"></div>
+          <div class="inp-row"><div class="lbl">Horário</div><input class="inp" type="time" id="m-time"></div>
+        </div>
+        <button class="btn" style="background:#00cc66" onclick="saveFood()">Registrar</button>`;
+      break;
+    }
+    case 'addWorkout': {
+      html = `<div class="modal-hdr"><div class="modal-title">NOVO TREINO</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Nome do treino</div><input class="inp" id="m-name" placeholder="Ex: Push Day"></div>
+        <div class="g2" style="gap:8px">
+          <div class="inp-row"><div class="lbl">Data</div><input class="inp" type="date" id="m-date" value="${todayISO()}"></div>
+          <div class="inp-row"><div class="lbl">Duração (min)</div><input class="inp" type="number" id="m-dur" placeholder="60"></div>
+        </div>
+        <div id="exercises-list" style="margin-bottom:10px"></div>
+        <button class="btn-o" onclick="addExerciseField()" style="margin-bottom:10px">+ Adicionar Exercício</button>
+        <button class="btn" onclick="saveWorkout()">Salvar Treino</button>`;
+      setTimeout(()=>{ addExerciseField(); },100);
+      break;
+    }
+    case 'addCar': {
+      const e = S.editing ? (sharedData.cars||[]).find(c=>c.id===S.editing) : null;
+      html = `<div class="modal-hdr"><div class="modal-title">${e?'EDITAR':'NOVO'} CARRO</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Nome/Apelido</div><input class="inp" id="m-name" placeholder="Ex: Gol Turbo" value="${e?e.name:''}"></div>
+        <div class="g2" style="gap:8px">
+          <div class="inp-row"><div class="lbl">Modelo</div><input class="inp" id="m-model" placeholder="Gol 1.6" value="${e?e.model||'':''}"></div>
+          <div class="inp-row"><div class="lbl">Ano</div><input class="inp" id="m-year" placeholder="2010" value="${e?e.year||'':''}"></div>
+        </div>
+        <div class="g2" style="gap:8px">
+          <div class="inp-row"><div class="lbl">Valor compra</div><input class="inp" type="number" id="m-buy" placeholder="0" value="${e?e.buyPrice||'':''}"></div>
+          <div class="inp-row"><div class="lbl">Custo reforma</div><input class="inp" type="number" id="m-reform" placeholder="0" value="${e?e.reformCost||'':''}"></div>
+        </div>
+        <div class="g2" style="gap:8px">
+          <div class="inp-row"><div class="lbl">Status</div><select class="sel" id="m-status"><option ${e?.status==='avaliação'?'selected':''}>avaliação</option><option ${e?.status==='reforma'?'selected':''}>reforma</option><option ${e?.status==='pronto'?'selected':''}>pronto</option><option ${e?.status==='vendido'?'selected':''}>vendido</option></select></div>
+          <div class="inp-row"><div class="lbl">Preço venda</div><input class="inp" type="number" id="m-sell" placeholder="0" value="${e?e.salePrice||'':''}"></div>
+        </div>
+        <div class="inp-row"><div class="lbl">Data entrega</div><input class="inp" type="date" id="m-deadline" value="${e?e.deadline||'':''}"></div>
+        <button class="btn" style="background:#00cc66" onclick="saveCar('${e?e.id:''}')">${e?'Salvar':'Adicionar'} Carro</button>`;
+      break;
+    }
+    case 'editCar': html=''; S.modal='addCar'; renderModal(); return;
+    case 'addMeeting': {
+      html = `<div class="modal-hdr"><div class="modal-title">NOVA REUNIÃO</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Título</div><input class="inp" id="m-title" placeholder="Ex: Reunião semanal"></div>
+        <div class="inp-row"><div class="lbl">Data e hora</div><input class="inp" type="datetime-local" id="m-datetime"></div>
+        <div class="inp-row"><div class="lbl">Pauta</div><textarea class="textarea" id="m-agenda" placeholder="O que vamos discutir?"></textarea></div>
+        <button class="btn" style="background:#00cc66" onclick="saveMeeting()">Agendar Reunião</button>`;
+      break;
+    }
+    case 'addSupplier': {
+      html = `<div class="modal-hdr"><div class="modal-title">NOVO FORNECEDOR</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Nome</div><input class="inp" id="m-name" placeholder="Ex: Peças Irmãos"></div>
+        <div class="inp-row"><div class="lbl">Categoria</div><select class="sel" id="m-cat"><option>Peças</option><option>Tintas</option><option>Ferramentas</option><option>Funilaria</option><option>Mecânica</option><option>Elétrica</option><option>Outros</option></select></div>
+        <div class="inp-row"><div class="lbl">Contato</div><input class="inp" id="m-contact" placeholder="(11) 99999-9999"></div>
+        <div class="inp-row"><div class="lbl">Observações</div><input class="inp" id="m-notes" placeholder="Preço médio, qualidade..."></div>
+        <button class="btn" style="background:#00cc66" onclick="saveSupplier()">Adicionar Fornecedor</button>`;
+      break;
+    }
+    case 'editVision': {
+      const v = sharedData.companyVision || {};
+      html = `<div class="modal-hdr"><div class="modal-title">EDITAR EMPRESA</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Visão</div><textarea class="textarea" id="m-visao" placeholder="Onde queremos chegar...">${v.visao||''}</textarea></div>
+        <div class="inp-row"><div class="lbl">Missão</div><textarea class="textarea" id="m-missao" placeholder="O que fazemos e para quem...">${v.missao||''}</textarea></div>
+        <div class="inp-row"><div class="lbl">Valores</div><textarea class="textarea" id="m-valores" placeholder="Nossos princípios...">${v.valores||''}</textarea></div>
+        <div class="inp-row"><div class="lbl">Regras</div><textarea class="textarea" id="m-regras" placeholder="Regras da empresa...">${v.regras||''}</textarea></div>
+        <button class="btn" style="background:#00cc66" onclick="saveVision()">Salvar</button>`;
+      break;
+    }
+    case 'addCalendarEvent': {
+      html = `<div class="modal-hdr"><div class="modal-title">NOVO COMPROMISSO</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Título</div><input class="inp" id="m-title" placeholder="Ex: Reunião com cliente"></div>
+        <div class="g2" style="gap:8px">
+          <div class="inp-row"><div class="lbl">Data</div><input class="inp" type="date" id="m-date"></div>
+          <div class="inp-row"><div class="lbl">Hora</div><input class="inp" type="time" id="m-time"></div>
+        </div>
+        <div class="inp-row"><div class="lbl">Descrição</div><input class="inp" id="m-desc" placeholder="Detalhes..."></div>
+        <button class="btn" style="background:#00cc66" onclick="saveCalendarEvent()">Adicionar Compromisso</button>`;
+      break;
+    }
+    case 'addPortfolio': {
+      html = `<div class="modal-hdr"><div class="modal-title">PORTFÓLIO</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Nome do carro</div><input class="inp" id="m-name" placeholder="Ex: Fusca Custom"></div>
+        <div class="inp-row"><div class="lbl">Ano</div><input class="inp" id="m-year" placeholder="1978"></div>
+        <div class="g2" style="gap:8px">
+          <div class="inp-row"><div class="lbl">Estado antes</div><input class="inp" id="m-before" placeholder="Enferrujado"></div>
+          <div class="inp-row"><div class="lbl">Estado depois</div><input class="inp" id="m-after" placeholder="Impecável"></div>
+        </div>
+        <div class="inp-row"><div class="lbl">Descrição do trabalho</div><textarea class="textarea" id="m-desc" placeholder="O que foi feito..."></textarea></div>
+        <button class="btn" style="background:#00cc66" onclick="savePortfolio()">Adicionar ao Portfólio</button>`;
+      break;
+    }
+    case 'addLoan': {
+      const e = getEdit('loans');
+      html = `<div class="modal-hdr"><div class="modal-title">${e?'EDITAR':'NOVO'} EMPRÉSTIMO</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Nome do cliente</div><input class="inp" id="m-client" placeholder="Nome completo" value="${e?e.clientName:''}"></div>
+        <div class="inp-row"><div class="lbl">Contato</div><input class="inp" id="m-contact" placeholder="(11) 99999-9999" value="${e?e.clientContact||'':''}"></div>
+        <div class="g2" style="gap:8px">
+          <div class="inp-row"><div class="lbl">Valor (R$)</div><input class="inp" type="number" id="m-amount" placeholder="0" value="${e?e.amount:''}"></div>
+          <div class="inp-row"><div class="lbl">Juros (%)</div><input class="inp" type="number" id="m-interest" placeholder="10" value="${e?e.interest||'':''}"></div>
+        </div>
+        <div class="g2" style="gap:8px">
+          <div class="inp-row"><div class="lbl">Vencimento</div><input class="inp" type="date" id="m-due" value="${e?e.dueDate||'':''}"></div>
+          <div class="inp-row"><div class="lbl">Status</div><select class="sel" id="m-status"><option ${e?.status==='em dia'?'selected':''}>em dia</option><option ${e?.status==='atrasado'?'selected':''}>atrasado</option><option ${e?.status==='quitado'?'selected':''}>quitado</option></select></div>
+        </div>
+        <div class="inp-row"><div class="lbl">Score do cliente (1-5)</div><select class="sel" id="m-score"><option value="5">⭐⭐⭐⭐⭐ Excelente</option><option value="4">⭐⭐⭐⭐ Bom</option><option value="3">⭐⭐⭐ Regular</option><option value="2">⭐⭐ Ruim</option><option value="1">⭐ Péssimo</option></select></div>
+        <div class="inp-row"><div class="lbl">Observações</div><input class="inp" id="m-notes" placeholder="Garantias, combinado..." value="${e?e.notes||'':''}"></div>
+        <button class="btn" style="background:#0088ff" onclick="saveLoan('${e?e.id:''}')">${e?'Salvar':'Registrar'} Empréstimo</button>`;
+      break;
+    }
+    case 'editLoan': html=''; S.modal='addLoan'; renderModal(); return;
+    case 'addBook': {
+      const e = getEdit('books');
+      html = `<div class="modal-hdr"><div class="modal-title">${e?'EDITAR':'NOVO'} LIVRO</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Título</div><input class="inp" id="m-title" placeholder="Nome do livro" value="${e?e.title:''}"></div>
+        <div class="inp-row"><div class="lbl">Autor</div><input class="inp" id="m-author" placeholder="Nome do autor" value="${e?e.author||'':''}"></div>
+        <div class="g2" style="gap:8px">
+          <div class="inp-row"><div class="lbl">Total páginas</div><input class="inp" type="number" id="m-pages" placeholder="300" value="${e?e.totalPages||'':''}"></div>
+          <div class="inp-row"><div class="lbl">Meta/dia (pág)</div><input class="inp" type="number" id="m-daily" placeholder="20" value="${e?e.dailyGoal||'':''}"></div>
+        </div>
+        <div class="inp-row"><div class="lbl">Status</div><select class="sel" id="m-status"><option ${e?.status==='para ler'?'selected':''}>para ler</option><option ${e?.status==='lendo'?'selected':''}>lendo</option><option ${e?.status==='lido'?'selected':''}>lido</option></select></div>
+        <button class="btn" style="background:#ffcc00;color:#000" onclick="saveBook('${e?e.id:''}')">${e?'Salvar':'Adicionar'} Livro</button>`;
+      break;
+    }
+    case 'editBook': html=''; S.modal='addBook'; renderModal(); return;
+    case 'addRoutineItem': {
+      html = `<div class="modal-hdr"><div class="modal-title">ITEM DA ROTINA</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Horário</div><input class="inp" type="time" id="m-time"></div>
+        <div class="inp-row"><div class="lbl">Título</div><input class="inp" id="m-title" placeholder="Ex: Academia"></div>
+        <div class="inp-row"><div class="lbl">Descrição</div><input class="inp" id="m-desc" placeholder="Detalhes..."></div>
+        <button class="btn" onclick="saveRoutineItem()">Adicionar à Rotina</button>`;
+      break;
+    }
+    case 'addJournal': {
+      html = `<div class="modal-hdr"><div class="modal-title">NOVO REGISTRO</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Como você está?</div>
+          <div style="display:flex;gap:10px;margin-bottom:12px">
+            ${['😊','😐','😔','😤','🔥'].map(m=>`<button onclick="document.getElementById('m-mood').value='${m}';$$('.mood-btn').forEach(b=>b.style.opacity='.4');this.style.opacity='1'" class="mood-btn" style="font-size:24px;background:none;border:none;cursor:pointer;opacity:.4">${m}</button>`).join('')}
+          </div>
+          <input type="hidden" id="m-mood">
+        </div>
+        <div class="inp-row"><div class="lbl">Registro do dia</div><textarea class="textarea" id="m-content" placeholder="Como foi seu dia? Conquistas, aprendizados..." style="min-height:120px"></textarea></div>
+        <button class="btn" onclick="saveJournal()">Salvar Registro</button>`;
+      break;
+    }
+    case 'addVisionItem': {
+      html = `<div class="modal-hdr"><div class="modal-title">NOVO SONHO</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Emoji</div><input class="inp" id="m-emoji" placeholder="🌟" value="🌟"></div>
+        <div class="inp-row"><div class="lbl">Título</div><input class="inp" id="m-title" placeholder="Ex: Montar a maior empresa de customização"></div>
+        <div class="inp-row"><div class="lbl">Descrição</div><textarea class="textarea" id="m-desc" placeholder="Descreva seu sonho em detalhes..."></textarea></div>
+        <div class="inp-row"><div class="lbl">Prazo</div><input class="inp" type="date" id="m-deadline"></div>
+        <button class="btn" style="background:#aa00ff" onclick="saveVisionItem()">Adicionar Sonho</button>`;
+      break;
+    }
+    case 'addGoal': {
+      html = `<div class="modal-hdr"><div class="modal-title">NOVA META</div><button class="close-btn" onclick="closeModal()">×</button></div>
+        <div class="inp-row"><div class="lbl">Título</div><input class="inp" id="m-title" placeholder="Ex: Faturar R$50k"></div>
+        <div class="g2" style="gap:8px">
+          <div class="inp-row"><div class="lbl">Meta</div><input class="inp" type="number" id="m-target" placeholder="50000"></div>
+          <div class="inp-row"><div class="lbl">Unidade</div><input class="inp" id="m-unit" placeholder="R$, kg, h..."></div>
+        </div>
+        <div class="g2" style="gap:8px">
+          <div class="inp-row"><div class="lbl">Progresso atual</div><input class="inp" type="number" id="m-cur" placeholder="0"></div>
+          <div class="inp-row"><div class="lbl">Período</div><select class="sel" id="m-period"><option>anual</option><option>mensal</option><option>semanal</option></select></div>
+        </div>
+        <div class="inp-row"><div class="lbl">Categoria</div><select class="sel" id="m-cat"><option>Finanças</option><option>Educação</option><option>Saúde</option><option>Academia</option><option>Carreira</option><option>Empresa</option><option>Pessoal</option></select></div>
+        <div class="inp-row"><div class="lbl">Cor</div><select class="sel" id="m-color"><option value="#ff1a1a">Vermelho</option><option value="#0088ff">Azul</option><option value="#00ff88">Verde</option><option value="#aa00ff">Roxo</option><option value="#ffcc00">Amarelo</option></select></div>
+        <button class="btn" style="background:#aa00ff" onclick="saveGoal()">Criar Meta</button>`;
+      break;
+    }
+  }
+
+  let overlay = $('modal-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'modal-overlay';
+    overlay.className = 'overlay';
+    overlay.onclick = e => { if(e.target===overlay) closeModal(); };
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = `<div class="modal">${html}</div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// SAVE ACTIONS
+// ═══════════════════════════════════════════════════════
+function v(id) { const el=document.getElementById(id); return el?el.value:''; }
+
+function saveAccount() {
+  const list = getKey('accounts',[]);
+  const e = S.editing ? list.find(i=>i.id===S.editing) : null;
+  if (e) {
+    e.name=v('m-name'); e.type=v('m-type'); e.balance=parseFloat(v('m-bal'))||0; e.color=v('m-color');
+  } else {
+    if(!v('m-name')) return;
+    list.unshift({id:uid(),name:v('m-name'),type:v('m-type'),balance:parseFloat(v('m-bal'))||0,color:v('m-color')});
+  }
+  setData('accounts',list); closeModal();
+}
+
+function saveTx() {
+  if(!v('m-desc')||!v('m-amount')) return;
+  const type = v('m-txtype');
+  const amount = type==='expense'?-Math.abs(parseFloat(v('m-amount'))):Math.abs(parseFloat(v('m-amount')));
+  const txs = getKey('transactions',[]);
+  txs.unshift({id:uid(),desc:v('m-desc'),amount,cat:v('m-cat'),date:todayISO(),acc:v('m-acc')});
+  setData('transactions',txs);
+  const accounts = getKey('accounts',[]);
+  const acc = accounts.find(a=>a.id===v('m-acc'));
+  if(acc){acc.balance+=amount; setData('accounts',accounts);}
+  closeModal();
+}
+
+function saveSubject() {
+  if(!v('m-name')) return;
+  const list = getKey('subjects',[]);
+  list.push({id:uid(),name:v('m-name'),goal:parseFloat(v('m-goal'))||5,color:v('m-color'),hrs:0,streak:0});
+  setData('subjects',list); closeModal();
+}
+
+function saveSession() {
+  if(!v('m-sub')) return;
+  const sessions = getKey('studySessions',[]);
+  const dur = parseInt(v('m-dur'))||60;
+  sessions.unshift({id:uid(),sub:v('m-sub'),dur,notes:v('m-notes'),date:todayISO()});
+  setData('studySessions',sessions);
+  const subs = getKey('subjects',[]);
+  const sub = subs.find(s=>s.name===v('m-sub'));
+  if(sub){sub.hrs=(sub.hrs||0)+dur/60; sub.streak=(sub.streak||0)+1; setData('subjects',subs);}
+  closeModal();
+}
+
+function saveFlashcard() {
+  if(!v('m-q')) return;
+  const list = getKey('flashcards',[]);
+  list.push({id:uid(),q:v('m-q'),a:v('m-a'),open:false});
+  setData('flashcards',list); closeModal();
+}
+
+function saveNote() {
+  if(!v('m-title')) return;
+  const list = getKey('studyNotes',[]);
+  list.unshift({id:uid(),title:v('m-title'),subject:v('m-sub'),content:v('m-content'),date:todayISO()});
+  setData('studyNotes',list); closeModal();
+}
+
+function saveHabit() {
+  if(!v('m-name')) return;
+  const list = getKey('habits',[]);
+  list.push({id:uid(),name:v('m-name'),icon:v('m-icon')||'⭐',cat:v('m-cat'),streak:0,done:false});
+  setData('habits',list); closeModal();
+}
+
+function saveFood() {
+  if(!v('m-name')) return;
+  const list = getKey('foodLog',[]);
+  list.unshift({id:uid(),name:v('m-name'),emoji:v('m-emoji'),cal:parseInt(v('m-cal'))||0,time:v('m-time'),date:todayISO()});
+  setData('foodLog',list); closeModal();
+}
+
+let exerciseFields = [];
+function addExerciseField() {
+  exerciseFields.push({name:'',sets:[{r:'',w:''}]});
+  const container = document.getElementById('exercises-list');
+  if(!container) return;
+  const idx = exerciseFields.length-1;
+  const div = document.createElement('div');
+  div.className='card';div.style.marginBottom='8px';
+  div.innerHTML=`<input class="inp" placeholder="Nome do exercício" id="ex-name-${idx}" style="margin-bottom:8px">
+    <div id="sets-${idx}">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:4px">
+        <div class="lbl">Reps</div><div class="lbl">Kg</div><div></div>
+      </div>
+      <div id="set-rows-${idx}"></div>
+    </div>
+    <button onclick="addSetField(${idx})" style="background:none;border:1px solid #1a1a1a;border-radius:8px;color:#555;cursor:pointer;padding:6px 12px;font-size:12px;width:100%;margin-top:6px">+ Série</button>`;
+  container.appendChild(div);
+  addSetField(idx);
+}
+
+function addSetField(exIdx) {
+  const container = document.getElementById(`set-rows-${exIdx}`);
+  if(!container) return;
+  const setIdx = container.children.length;
+  const div = document.createElement('div');
+  div.style.cssText='display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:6px';
+  div.innerHTML=`<input class="inp" type="number" id="ex-${exIdx}-r-${setIdx}" placeholder="12"><input class="inp" type="number" id="ex-${exIdx}-w-${setIdx}" placeholder="60"><span style="display:flex;align-items:center;color:#444;font-size:12px">#${setIdx+1}</span>`;
+  container.appendChild(div);
+}
+
+function saveWorkout() {
+  if(!v('m-name')) return;
+  const exercises = exerciseFields.map((_, idx) => {
+    const name = v(`ex-name-${idx}`);
+    const sets=[];
+    let si=0;
+    while(document.getElementById(`ex-${idx}-r-${si}`)){
+      sets.push({r:parseInt(v(`ex-${idx}-r-${si}`))||0,w:parseFloat(v(`ex-${idx}-w-${si}`))||0});
+      si++;
+    }
+    return {name,sets};
+  }).filter(e=>e.name);
+  const list = getKey('workouts',[]);
+  list.unshift({id:uid(),name:v('m-name'),date:v('m-date')||todayISO(),dur:parseInt(v('m-dur'))||60,exercises});
+  setData('workouts',list);
+  exerciseFields=[];
+  closeModal();
+}
+
+function saveCar(existingId) {
+  const sd = getProfile('startup');
+  if(!sd.cars) sd.cars=[];
+  const car = {
+    id:existingId||uid(),name:v('m-name'),model:v('m-model'),year:v('m-year'),
+    buyPrice:parseFloat(v('m-buy'))||0,reformCost:parseFloat(v('m-reform'))||0,
+    salePrice:parseFloat(v('m-sell'))||0,status:v('m-status'),deadline:v('m-deadline')
+  };
+  if(existingId){const i=sd.cars.findIndex(c=>c.id===existingId);if(i>-1)sd.cars[i]=car;}
+  else sd.cars.unshift(car);
+  if(car.deadline){scheduleNotification(`🚗 ${car.name}`,`Prazo de entrega chegando!`,car.deadline+'T09:00');}
+  saveProfile('startup',sd); closeModal();
+}
+
+function saveMeeting() {
+  if(!v('m-title')) return;
+  const sd = getProfile('startup');
+  if(!sd.meetings) sd.meetings=[];
+  const m = {id:uid(),title:v('m-title'),datetime:v('m-datetime'),agenda:v('m-agenda')};
+  sd.meetings.unshift(m);
+  if(m.datetime){scheduleNotification(`📅 ${m.title}`,'Reunião em breve!',m.datetime);}
+  saveProfile('startup',sd); closeModal();
+}
+
+function saveSupplier() {
+  if(!v('m-name')) return;
+  const sd = getProfile('startup');
+  if(!sd.suppliers) sd.suppliers=[];
+  sd.suppliers.push({id:uid(),name:v('m-name'),category:v('m-cat'),contact:v('m-contact'),notes:v('m-notes')});
+  saveProfile('startup',sd); closeModal();
+}
+
+function saveVision() {
+  const sd = getProfile('startup');
+  sd.companyVision = {visao:v('m-visao'),missao:v('m-missao'),valores:v('m-valores'),regras:v('m-regras')};
+  saveProfile('startup',sd); closeModal();
+}
+
+function saveCalendarEvent() {
+  if(!v('m-title')) return;
+  const sd = getProfile('startup');
+  if(!sd.sharedCalendar) sd.sharedCalendar=[];
+  const e = {id:uid(),title:v('m-title'),date:v('m-date'),time:v('m-time'),desc:v('m-desc')};
+  sd.sharedCalendar.push(e);
+  if(e.date){scheduleNotification(`📆 ${e.title}`,`Compromisso hoje às ${e.time||''}`,e.date+'T'+(e.time||'09:00'));}
+  saveProfile('startup',sd); closeModal();
+}
+
+function savePortfolio() {
+  if(!v('m-name')) return;
+  const sd = getProfile('startup');
+  if(!sd.portfolio) sd.portfolio=[];
+  sd.portfolio.push({id:uid(),name:v('m-name'),year:v('m-year'),before:v('m-before'),after:v('m-after'),desc:v('m-desc')});
+  saveProfile('startup',sd); closeModal();
+}
+
+function saveLoan(existingId) {
+  if(!v('m-client')||!v('m-amount')) return;
+  const list = getKey('loans',[]);
+  const amount = parseFloat(v('m-amount'))||0;
+  const interest = parseFloat(v('m-interest'))||0;
+  const totalReceive = amount + (amount * interest/100);
+  const loan = {
+    id:existingId||uid(),clientName:v('m-client'),clientContact:v('m-contact'),
+    amount,interest,totalReceive,dueDate:v('m-due'),status:v('m-status'),
+    score:parseInt(v('m-score'))||3,notes:v('m-notes')
+  };
+  if(existingId){const i=list.findIndex(l=>l.id===existingId);if(i>-1)list[i]=loan;}
+  else list.unshift(loan);
+  if(loan.dueDate){scheduleNotification(`💰 ${loan.clientName}`,`Vencimento do empréstimo chegando!`,loan.dueDate+'T09:00');}
+  setData('loans',list); closeModal();
+}
+
+function saveBook(existingId) {
+  if(!v('m-title')) return;
+  const list = getKey('books',[]);
+  const book = {
+    id:existingId||uid(),title:v('m-title'),author:v('m-author'),
+    totalPages:parseInt(v('m-pages'))||0,dailyGoal:parseInt(v('m-daily'))||0,
+    currentPage:existingId?(list.find(b=>b.id===existingId)?.currentPage||0):0,
+    status:v('m-status')
+  };
+  if(existingId){const i=list.findIndex(b=>b.id===existingId);if(i>-1)list[i]=book;}
+  else list.unshift(book);
+  setData('books',list); closeModal();
+}
+
+function saveRoutineItem() {
+  if(!v('m-title')) return;
+  const list = getKey('routine',[]);
+  list.push({id:uid(),time:v('m-time'),title:v('m-title'),desc:v('m-desc')});
+  setData('routine',list); closeModal();
+}
+
+function saveJournal() {
+  if(!v('m-content')) return;
+  const list = getKey('journal',[]);
+  list.unshift({id:uid(),content:v('m-content'),mood:v('m-mood'),date:new Date().toLocaleString('pt-BR')});
+  setData('journal',list); closeModal();
+}
+
+function saveVisionItem() {
+  if(!v('m-title')) return;
+  const list = getKey('visionBoard',[]);
+  list.push({id:uid(),emoji:v('m-emoji')||'🌟',title:v('m-title'),desc:v('m-desc'),deadline:v('m-deadline')});
+  setData('visionBoard',list); closeModal();
+}
+
+function saveGoal() {
+  if(!v('m-title')||!v('m-target')) return;
+  const list = getKey('goals',[]);
+  list.push({id:uid(),title:v('m-title'),target:parseFloat(v('m-target')),cur:parseFloat(v('m-cur'))||0,unit:v('m-unit'),period:v('m-period'),cat:v('m-cat'),color:v('m-color')});
+  setData('goals',list); closeModal();
+}
+
+// ═══════════════════════════════════════════════════════
+// INTERACTIVE ACTIONS
+// ═══════════════════════════════════════════════════════
+function toggleHabit(id) {
+  const list = getKey('habits',[]);
+  const h = list.find(x=>x.id===id);
+  if(h){h.done=!h.done;h.streak=h.done?(h.streak||0)+1:Math.max(0,(h.streak||1)-1);}
+  setData('habits',list); render();
+}
+
+function toggleWater(i) {
+  let w = getKey('water',0);
+  const wg = getKey('waterGoal',8);
+  w = i+1<=w?i:i+1;
+  setData('water',w); render();
+}
+
+function setWaterGoal() {
+  const g = parseInt(document.getElementById('water-goal-inp')?.value)||8;
+  setData('waterGoal',g); render();
+}
+
+function toggleWorkoutExpand(id) {
+  S.expandedWorkout = S.expandedWorkout===id?null:id;
+  render();
+}
+
+function toggleFlashcard(id) {
+  const list = getKey('flashcards',[]);
+  const f = list.find(x=>x.id===id);
+  if(f) f.open=!f.open;
+  setData('flashcards',list); render();
+}
+
+function updatePage(bookId) {
+  const page = parseInt(document.getElementById(`page-inp-${bookId}`)?.value)||0;
+  const list = getKey('books',[]);
+  const b = list.find(x=>x.id===bookId);
+  if(b){b.currentPage=page; if(page>=(b.totalPages||0)&&b.totalPages>0)b.status='lido';}
+  setData('books',list); render();
+}
+
+function calcIMC() {
+  const peso = parseFloat(document.getElementById('imc-peso')?.value)||0;
+  const alt = parseFloat(document.getElementById('imc-alt')?.value)||0;
+  if(!peso||!alt) return;
+  const h = alt/100;
+  const result = (peso/(h*h)).toFixed(1);
+  setData('imc',{peso,alt,result}); render();
+}
+
+function calcReform() {
+  const buy = parseFloat(document.getElementById('calc-buy')?.value)||0;
+  const reform = parseFloat(document.getElementById('calc-reform')?.value)||0;
+  const sell = parseFloat(document.getElementById('calc-sell')?.value)||0;
+  const profit = sell - buy - reform;
+  const el = document.getElementById('calc-result');
+  if(el) {el.textContent=fmtR(profit); el.style.color=profit>=0?'#00ff88':'#ff4444';}
+}
+
+function deleteItem(key, id) {
+  const list = getKey(key,[]);
+  setData(key, list.filter(i=>i.id!==id));
+  render();
+}
+
+function deleteGarageItem(key, id) {
+  const sd = getProfile('startup');
+  if(sd[key]) sd[key] = sd[key].filter(i=>i.id!==id);
+  saveProfile('startup',sd);
+  render();
+}
+
+// Timer
+S.studyTimer = {running:false,secs:0,sub:''};
+let timerInterval = null;
+
+function setTimerSub(val) { S.studyTimer.sub=val; }
+
+function toggleTimer() {
+  if(S.studyTimer.running){
+    clearInterval(timerInterval);
+    S.studyTimer.running=false;
+  } else {
+    S.studyTimer.running=true;
+    timerInterval=setInterval(()=>{
+      S.studyTimer.secs++;
+      const el=document.getElementById('timer-display');
+      if(el){el.textContent=fmtTimer(S.studyTimer.secs);el.style.color='#ff1a1a';}
+    },1000);
+  }
+  render();
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  S.studyTimer={running:false,secs:0,sub:''};
+  render();
+}
+
+// FAB
+function toggleFab() {
+  S.fabOpen=!S.fabOpen;
+  const fab=$('fab');
+  fab.style.transform=S.fabOpen?'rotate(45deg)':'none';
+  let menu=$('fab-menu');
+  if(S.fabOpen){
+    if(!menu){menu=document.createElement('div');menu.id='fab-menu';menu.style.cssText='position:fixed;bottom:136px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:98';document.body.appendChild(menu);}
+    const actions = S.profile==='startup'
+      ? [{l:'Carro',c:'#00cc66',fn:"openModal('addCar')"},{l:'Reunião',c:'#ffcc00',fn:"openModal('addMeeting')"},{l:'Fornecedor',c:'#0088ff',fn:"openModal('addSupplier')"}]
+      : [{l:'Despesa',c:'#ff1a1a',fn:"openModal('addTx')"},{l:'Receita',c:'#00ff88',fn:"openModal('addTx')"},{l:'Hábito',c:'#00cc66',fn:"openModal('addHabit')"},{l:'Treino',c:'#aa00ff',fn:"openModal('addWorkout')"}];
+    menu.innerHTML=actions.map(a=>`
+      <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
+        <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;padding:4px 10px;font-size:11px;color:#666;font-family:'JetBrains Mono',monospace">${a.l}</div>
+        <button onclick="${a.fn};S.fabOpen=false;toggleFab()" style="width:38px;height:38px;border-radius:50%;background:${a.c}22;border:1px solid ${a.c}55;cursor:pointer;color:${a.c};font-size:18px;display:flex;align-items:center;justify-content:center">+</button>
+      </div>`).join('');
+  } else {
+    if(menu) menu.remove();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    const l=$('loading');
+    if(l){l.style.opacity='0';setTimeout(()=>{l.style.display='none';show('login-screen');},600);}
+  },2200);
+});
+</script>
+</body>
+</html>
